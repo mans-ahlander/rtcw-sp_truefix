@@ -1,0 +1,32 @@
+# Visual Studio user/cache files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio build output
+Debug/
+Release/
+debug/
+release/
+
+# Compiled/intermediate files
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.pch
+*.ipdb
+*.iobj
+*.tlog
+*.log
+
+# Other generated build files
+*.tmp
+*.bak
+*.exe
+
+# OS/editor files
+.DS_Store
+Thumbs.db
