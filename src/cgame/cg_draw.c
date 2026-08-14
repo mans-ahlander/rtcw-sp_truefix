@@ -939,21 +939,95 @@ static float CG_DrawSnapshot( float y ) {
 	return y + BIGCHAR_HEIGHT + 4;
 }
 
+
+
+/*
+==================
+CG_GetHudScale
+
+Added by Hoyo
+Helper for drawing HUD up-right corner
+==================
+*/
+static float CG_GetHudScale(void) {
+	float scale;
+
+	scale = cg_drawHudScale.value;
+
+	if (scale < 0.25f) {
+		scale = 0.25f;
+	}
+	else if (scale > 4.0f) {
+		scale = 4.0f;
+	}
+
+	return scale;
+}
+
+/*
+==================
+CG_DrawBigStringScaled
+
+Added by Hoyo
+Helper for drawing HUD up-right corner
+==================
+*/
+static float CG_DrawBigStringScaled(float y, const char* s, float scale, const vec4_t overrideColor) {
+	int w;
+	int charWidth;
+	int charHeight;
+	qboolean shadow;
+	vec4_t color;
+
+	charWidth = (int)(BIGCHAR_WIDTH * scale);
+	charHeight = (int)(BIGCHAR_HEIGHT * scale);
+
+	w = CG_DrawStrlen(s) * charWidth;
+
+	if (overrideColor) {
+		Vector4Copy(overrideColor, color);
+	}
+	else {
+		color[0] = Com_Clamp(0.0f, 1.0f, cg_drawHudColorRed.value);
+		color[1] = Com_Clamp(0.0f, 1.0f, cg_drawHudColorGreen.value);
+		color[2] = Com_Clamp(0.0f, 1.0f, cg_drawHudColorBlue.value);
+		color[3] = Com_Clamp(0.0f, 1.0f, cg_drawHudColorAlpha.value);
+	}
+
+	shadow = (cg_drawHudShadow.integer != 0);
+
+	CG_DrawStringExt2(
+		UPPERRIGHT_X - w,
+		(int)(y + (2 * scale)),
+		s,
+		color,
+		qfalse,
+		shadow,
+		charWidth,
+		charHeight,
+		0,
+		ALIGN_TOPLEFT
+	);
+
+	return y + (BIGCHAR_HEIGHT + 4) * scale;
+}
+
 /*
 ==================
 CG_DrawFPS
+Modified by Hoyo
 ==================
 */
 #define FPS_FRAMES  4
-static float CG_DrawFPS( float y ) {
-	char		*s;
-	int			w;
+static float CG_DrawFPS(float y) {
+	char* s;
 	static int	previousTimes[FPS_FRAMES];
 	static int	index;
 	int			i, total;
 	int			fps;
 	static int	previous;
 	int			t, frameTime;
+	float		scale;
 
 	// don't use serverTime, because that will be drifting to
 	// correct for internet lag changes, timescales, timedemos, etc
@@ -963,41 +1037,51 @@ static float CG_DrawFPS( float y ) {
 
 	previousTimes[index % FPS_FRAMES] = frameTime;
 	index++;
-	if ( index > FPS_FRAMES ) {
+
+	// Use the HUD scale for the vertical spacing even while
+	// the FPS average isn't ready yet.
+	scale = CG_GetHudScale();
+
+	if (index > FPS_FRAMES) {
 		// average multiple frames together to smooth changes out a bit
 		total = 0;
-		for ( i = 0 ; i < FPS_FRAMES ; i++ ) {
+
+		for (i = 0; i < FPS_FRAMES; i++) {
 			total += previousTimes[i];
 		}
-		if ( !total ) {
+
+		if (!total) {
 			total = 1;
 		}
+
 		fps = 1000 * FPS_FRAMES / total;
 
-		s = va( "%ifps", fps );
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
+		s = va("%ifps", fps);
 
-		CG_DrawBigString( UPPERRIGHT_X - w, y + 2, s, 1.0F, ALIGN_TOPRIGHT );
+		return CG_DrawBigStringScaled(y, s, scale, NULL);
 	}
 
-	return y + BIGCHAR_HEIGHT + 4;
+	return y + (BIGCHAR_HEIGHT * scale) + (4 * scale);
 }
 
 /*
 =================
 CG_DrawTimer
+Modified by Hoyo
 =================
 */
-static float CG_DrawTimer( float y ) {
-	char	*s;
-	int		w;
-	int		mins, seconds, tens;
+static float CG_DrawTimer(float y) {
+	char* s;
+	int		mins, seconds;
 	int		msec;
+	float	scale;
 
 	// NERVE - SMF - draw time remaining in multiplayer
-	if ( cgs.gametype == GT_WOLF ) {
-		msec = ( cgs.timelimit * 60.f * 1000.f ) - ( cg.time - cgs.levelStartTime );
-	} else {
+	if (cgs.gametype == GT_WOLF) {
+		msec = (cgs.timelimit * 60.f * 1000.f) -
+			(cg.time - cgs.levelStartTime);
+	}
+	else {
 		msec = cg.time - cgs.levelStartTime;
 	}
 	// -NERVE - SMF
@@ -1005,17 +1089,77 @@ static float CG_DrawTimer( float y ) {
 	seconds = msec / 1000;
 	mins = seconds / 60;
 	seconds -= mins * 60;
-	tens = seconds / 10;
-	seconds -= tens * 10;
 
-	s = va( "%i:%i%i", mins, tens, seconds );
-	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
+	s = va("%i:%02i", mins, seconds);
 
-	CG_DrawBigString( UPPERRIGHT_X - w, y + 2, s, 1.0F, ALIGN_TOPRIGHT );
+	scale = CG_GetHudScale();
 
-	return y + BIGCHAR_HEIGHT + 4;
+	return CG_DrawBigStringScaled(y, s, scale, NULL);
 }
 
+/*
+==================
+CG_DrawSpeed
+
+Added by Hoyo
+cg_drawSpeed:
+	0 = off
+	1 = horizontal speed (XY)
+	2 = absolute 3D speed (XYZ)
+	3 = velocity components (X/Y/Z)
+==================
+*/
+static float CG_DrawSpeed(float y) {
+	char* s;
+	float scale;
+	float speed;
+	static float previousSpeed;
+	static qboolean previousSpeedValid;
+	vec4_t helperColor;
+	float vx, vy, vz;
+
+	vx = cg.predictedPlayerState.velocity[0];
+	vy = cg.predictedPlayerState.velocity[1];
+	vz = cg.predictedPlayerState.velocity[2];
+
+	if (cg_drawSpeed.integer == 1) {
+		speed = sqrt(vx * vx + vy * vy);
+		s = va("speed: %d", (int)speed);
+	}
+	else if (cg_drawSpeed.integer == 2) {
+		speed = sqrt(vx * vx + vy * vy + vz * vz);
+		s = va("speed: %d", (int)speed);
+	}
+	else if (cg_drawSpeed.integer == 3) {
+		speed = sqrt(vx * vx + vy * vy);
+		s = va("vel: %d %d %d",
+			(int)vx, (int)vy, (int)vz);
+	}
+	else {
+		return y;
+	}
+
+	scale = CG_GetHudScale();
+
+	if (cg_drawSpeedHelper.integer) {
+		if (previousSpeedValid && speed > previousSpeed) {
+			Vector4Set(helperColor, 1.0f, 1.0f, 0.0f, 1.0f);
+		}
+		else {
+			helperColor[0] = Com_Clamp(0.0f, 1.0f, cg_drawHudColorRed.value);
+			helperColor[1] = Com_Clamp(0.0f, 1.0f, cg_drawHudColorGreen.value);
+			helperColor[2] = Com_Clamp(0.0f, 1.0f, cg_drawHudColorBlue.value);
+			helperColor[3] = Com_Clamp(0.0f, 1.0f, cg_drawHudColorAlpha.value);
+		}
+
+		previousSpeed = speed;
+		previousSpeedValid = qtrue;
+
+		return CG_DrawBigStringScaled(y, s, scale, helperColor);
+	}
+
+	return CG_DrawBigStringScaled(y, s, scale, NULL);
+}
 
 /*
 =================
@@ -1211,11 +1355,14 @@ static void CG_DrawUpperRight( void ) {
 	if ( cg_drawSnapshot.integer ) {
 		y = CG_DrawSnapshot( y );
 	}
-	if ( cg_drawFPS.integer ) {
-		y = CG_DrawFPS( y );
+	if (cg_drawFPS.integer) {
+		y = CG_DrawFPS(y);
 	}
-	if ( cg_drawTimer.integer ) {
-		y = CG_DrawTimer( y );
+	if (cg_drawTimer.integer) {
+		y = CG_DrawTimer(y);
+	}
+	if (cg_drawSpeed.integer) {
+		y = CG_DrawSpeed(y);
 	}
 // (SA) disabling drawattacker for the time being
 //	if ( cg_drawAttacker.integer ) {
