@@ -1642,64 +1642,106 @@ qboolean AICast_RequestCrouchAttack( cast_state_t *cs, vec3_t org, float time ) 
 AICast_QueryThink
 ==============
 */
-void AICast_QueryThink( cast_state_t *cs ) {
-	gentity_t *ent;
+void AICast_QueryThink(cast_state_t* cs) {
+	gentity_t* ent;
 	qboolean visible;
-	cast_state_t *ocs;
+	cast_state_t* ocs;
 	vec3_t vec;
 
+	// Hoyo: Added validation of enemyNum, entityNum, ocs.
+	// This used to cause some random crashes, like when missing the jump at dam.
+	// <-- Hoyo added
+	if (cs->enemyNum < 0 || cs->enemyNum >= MAX_CLIENTS) {
+		Com_Printf(
+			"AICast_QueryThink: INVALID enemyNum=%d cs=%p entityNum=%d state=%d\n",
+			cs->enemyNum,
+			cs,
+			cs->entityNum,
+			cs->aiState
+		);
+
+		AICast_StateChange(cs, AISTATE_RELAXED);
+		return;
+	}
+
+	if (cs->entityNum < 0 || cs->entityNum >= MAX_GENTITIES) {
+		Com_Printf(
+			"AICast_QueryThink: INVALID entityNum=%d cs=%p enemyNum=%d\n",
+			cs->entityNum,
+			cs,
+			cs->enemyNum
+		);
+		return;
+	}
+	// --> Hoyo added
+
 	ent = &g_entities[cs->entityNum];
-	ocs = AICast_GetCastState( cs->enemyNum );
+	ocs = AICast_GetCastState(cs->enemyNum);
+
+	// <-- Hoyo added
+	if (!ocs) {
+		Com_Printf(
+			"AICast_QueryThink: NULL ocs! enemyNum=%d cs=%p entityNum=%d\n",
+			cs->enemyNum,
+			cs,
+			cs->entityNum
+		);
+
+		AICast_StateChange(cs, AISTATE_RELAXED);
+		return;
+	}
+	// --> Hoyo added
 
 	// never crouch while in this state (by choice anyway)
 	cs->attackcrouch_time = 0;
 
 	// look at where we last (thought we) saw them
-	VectorSubtract( cs->vislist[cs->enemyNum].visible_pos, cs->bs->origin, vec );
-	VectorNormalize( vec );
-	vectoangles( vec, cs->ideal_viewangles );
+	VectorSubtract(cs->vislist[cs->enemyNum].visible_pos, cs->bs->origin, vec);
+	VectorNormalize(vec);
+	vectoangles(vec, cs->ideal_viewangles);
 
 	// are they visible now?
-	visible = AICast_VisibleFromPos( cs->bs->origin, cs->entityNum, g_entities[cs->enemyNum].r.currentOrigin, cs->enemyNum, qfalse );
+	visible = AICast_VisibleFromPos(cs->bs->origin, cs->entityNum, g_entities[cs->enemyNum].r.currentOrigin, cs->enemyNum, qfalse);
 
 	// make sure we dont process the sighting of this enemy by going into query mode again, without them being visible again after we leave here
 	cs->vislist[cs->enemyNum].flags &= ~AIVIS_PROCESS_SIGHTING;
 
 	// look towards where we last saw them
-	AICast_AimAtEnemy( cs );
+	AICast_AimAtEnemy(cs);
 
 	// if visible and alert time has expired, go POSTAL
-	if ( ( cs->queryAlertSightTime < 0 ) || ( ( cs->queryAlertSightTime < level.time ) && visible ) ) {
-		if ( !cs->queryAlertSightTime ) {
+	if ((cs->queryAlertSightTime < 0) || ((cs->queryAlertSightTime < level.time) && visible)) {
+		if (!cs->queryAlertSightTime) {
 			// set the "short reaction" condition
-			BG_UpdateConditionValue( cs->entityNum, ANIM_COND_SHORT_REACTION, qtrue, qfalse );
+			BG_UpdateConditionValue(cs->entityNum, ANIM_COND_SHORT_REACTION, qtrue, qfalse);
 		}
-		AICast_StateChange( cs, AISTATE_COMBAT );
-		BG_UpdateConditionValue( cs->entityNum, ANIM_COND_SHORT_REACTION, qfalse, qfalse );
-		AIFunc_BattleStart( cs );
+		AICast_StateChange(cs, AISTATE_COMBAT);
+		BG_UpdateConditionValue(cs->entityNum, ANIM_COND_SHORT_REACTION, qfalse, qfalse);
+		AIFunc_BattleStart(cs);
 		return;
 	}
 
 	// if they've fired since the start of the query mode, go POSTAL
-	if ( ocs->lastWeaponFired > cs->queryStartTime ) {
+	if (ocs->lastWeaponFired > cs->queryStartTime) {
 		// set the "short reaction" condition
-		BG_UpdateConditionValue( cs->entityNum, ANIM_COND_SHORT_REACTION, qtrue, qfalse );
-		AICast_StateChange( cs, AISTATE_COMBAT );
-		BG_UpdateConditionValue( cs->entityNum, ANIM_COND_SHORT_REACTION, qfalse, qfalse );
-		AIFunc_BattleStart( cs );
+		BG_UpdateConditionValue(cs->entityNum, ANIM_COND_SHORT_REACTION, qtrue, qfalse);
+		AICast_StateChange(cs, AISTATE_COMBAT);
+		BG_UpdateConditionValue(cs->entityNum, ANIM_COND_SHORT_REACTION, qfalse, qfalse);
+		AIFunc_BattleStart(cs);
 		return;
 	}
 
 	// if not visible, then kill the Lock On timer
-	if ( ( cs->queryAlertSightTime > 0 ) && !visible ) {
+	if ((cs->queryAlertSightTime > 0) && !visible) {
 		cs->queryAlertSightTime = 0;
 	}
 
 	// if the query has expired, go back to relaxed
-	if ( !ent->client->ps.legsTimer ) {
-		AICast_StateChange( cs, AISTATE_RELAXED );
+	if (!ent->client->ps.legsTimer) {
+		AICast_StateChange(cs, AISTATE_RELAXED);
 	}
 }
+
 
 /*
 ================
