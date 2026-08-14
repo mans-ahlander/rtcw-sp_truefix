@@ -7,10 +7,10 @@ and other genuine engine bugs while preserving the original game's gameplay and 
 
 The project also includes a small number of features useful for RTCW speedrunning, such as:
 
-- top-right HUD scaling
-- velocity/speed display
+- top-right HUD scale/color/shadow cvars
+- speed display
 - speed gain indicator      (sv_cheats protected)
-- position/angle save/load commands (sv_cheats protected)
+- savepos/loadpos commands  (sv_cheats protected)
     - Example:
         - bind n savepos
         - bind m loadpos
