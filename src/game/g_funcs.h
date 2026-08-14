@@ -1048,6 +1048,8 @@
 {"Cmd_StopCamera_f", (byte *)Cmd_StopCamera_f},
 {"Cmd_StartCamera_f", (byte *)Cmd_StartCamera_f},
 {"Cmd_SetViewpos_f", (byte *)Cmd_SetViewpos_f},
+{"Cmd_LoadPos_f", (byte *)Cmd_LoadPos_f},
+{"Cmd_SavePos_f", (byte *)Cmd_SavePos_f},
 {"G_canPickupMelee", (byte *)G_canPickupMelee},
 {"Cmd_Vote_f", (byte *)Cmd_Vote_f},
 {"Cmd_CallVote_f", (byte *)Cmd_CallVote_f},

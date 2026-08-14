@@ -1048,6 +1048,8 @@ extern void Cmd_SetCameraOrigin_f ( gentity_t * ent ) ;
 extern void Cmd_StopCamera_f ( gentity_t * ent ) ;
 extern void Cmd_StartCamera_f ( gentity_t * ent ) ;
 extern void Cmd_SetViewpos_f ( gentity_t * ent ) ;
+extern void Cmd_LoadPos_f ( gentity_t * ent ) ;
+extern void Cmd_SavePos_f ( gentity_t * ent ) ;
 extern qboolean G_canPickupMelee ( gentity_t * ent ) ;
 extern void Cmd_Vote_f ( gentity_t * ent ) ;
 extern void Cmd_CallVote_f ( gentity_t * ent ) ;
