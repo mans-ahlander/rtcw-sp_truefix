@@ -1047,6 +1047,7 @@
 {"Cmd_SetCameraOrigin_f", (byte *)Cmd_SetCameraOrigin_f},
 {"Cmd_StopCamera_f", (byte *)Cmd_StopCamera_f},
 {"Cmd_StartCamera_f", (byte *)Cmd_StartCamera_f},
+{"Cmd_CvarCheck_f", (byte *)Cmd_CvarCheck_f},
 {"Cmd_SetViewpos_f", (byte *)Cmd_SetViewpos_f},
 {"Cmd_LoadPos_f", (byte *)Cmd_LoadPos_f},
 {"Cmd_SavePos_f", (byte *)Cmd_SavePos_f},

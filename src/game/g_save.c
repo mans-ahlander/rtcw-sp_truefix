@@ -1298,7 +1298,7 @@ qboolean G_SaveGame( char *username ) {
 			G_SaveWriteError();
 		}
 		WriteEntity( f, ent );
-	}
+	} 
 	i = -1;
 	if ( !G_SaveWrite( &i, sizeof( i ), f ) ) {
 		G_SaveWriteError();

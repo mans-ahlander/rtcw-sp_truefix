@@ -551,4 +551,5 @@ void CG_InitConsoleCommands(void) {
 	// Added by Hoyo
 	trap_AddCommand("savepos");
 	trap_AddCommand("loadpos");
+	trap_AddCommand("cvarcheck");
 }
