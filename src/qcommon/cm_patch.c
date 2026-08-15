@@ -621,57 +621,74 @@ static int  CM_GridPlane( int gridPlanes[MAX_GRID_SIZE][MAX_GRID_SIZE][2], int i
 CM_EdgePlaneNum
 ==================
 */
-static int CM_EdgePlaneNum( cGrid_t *grid, int gridPlanes[MAX_GRID_SIZE][MAX_GRID_SIZE][2], int i, int j, int k ) {
-	float   *p1, *p2;
+static int CM_EdgePlaneNum(cGrid_t* grid, int gridPlanes[MAX_GRID_SIZE][MAX_GRID_SIZE][2], int i, int j, int k) {
+	float* p1, * p2;
 	vec3_t up;
 	int p;
 
-	switch ( k ) {
+	switch (k) {
 	case 0: // top border
 		p1 = grid->points[i][j];
 		p2 = grid->points[i + 1][j];
-		p = CM_GridPlane( gridPlanes, i, j, 0 );
-		VectorMA( p1, 4, planes[ p ].plane, up );
-		return CM_FindPlane( p1, p2, up );
+		p = CM_GridPlane(gridPlanes, i, j, 0);
+		if (p == -1) { // Hoyo. Added safety if CM_GridPlane returns -1. Would access planes[-1], causing crash. (Credit to iortcw team)
+			return -1;
+		}
+		VectorMA(p1, 4, planes[p].plane, up);
+		return CM_FindPlane(p1, p2, up);
 
 	case 2: // bottom border
 		p1 = grid->points[i][j + 1];
 		p2 = grid->points[i + 1][j + 1];
-		p = CM_GridPlane( gridPlanes, i, j, 1 );
-		VectorMA( p1, 4, planes[ p ].plane, up );
-		return CM_FindPlane( p2, p1, up );
+		p = CM_GridPlane(gridPlanes, i, j, 1);
+		if (p == -1) { // Hoyo. Added safety if CM_GridPlane returns -1. Would access planes[-1], causing crash. (Credit to iortcw team)
+			return -1;
+		}
+		VectorMA(p1, 4, planes[p].plane, up);
+		return CM_FindPlane(p2, p1, up);
 
 	case 3: // left border
 		p1 = grid->points[i][j];
 		p2 = grid->points[i][j + 1];
-		p = CM_GridPlane( gridPlanes, i, j, 1 );
-		VectorMA( p1, 4, planes[ p ].plane, up );
-		return CM_FindPlane( p2, p1, up );
+		p = CM_GridPlane(gridPlanes, i, j, 1);
+		if (p == -1) { // Hoyo. Added safety if CM_GridPlane returns -1. Would access planes[-1], causing crash. (Credit to iortcw team)
+			return -1;
+		}
+		VectorMA(p1, 4, planes[p].plane, up);
+		return CM_FindPlane(p2, p1, up);
 
 	case 1: // right border
 		p1 = grid->points[i + 1][j];
 		p2 = grid->points[i + 1][j + 1];
-		p = CM_GridPlane( gridPlanes, i, j, 0 );
-		VectorMA( p1, 4, planes[ p ].plane, up );
-		return CM_FindPlane( p1, p2, up );
+		p = CM_GridPlane(gridPlanes, i, j, 0);
+		if (p == -1) { // Hoyo. Added safety if CM_GridPlane returns -1. Would access planes[-1], causing crash. (Credit to iortcw team)
+			return -1;
+		}
+		VectorMA(p1, 4, planes[p].plane, up);
+		return CM_FindPlane(p1, p2, up);
 
 	case 4: // diagonal out of triangle 0
 		p1 = grid->points[i + 1][j + 1];
 		p2 = grid->points[i][j];
-		p = CM_GridPlane( gridPlanes, i, j, 0 );
-		VectorMA( p1, 4, planes[ p ].plane, up );
-		return CM_FindPlane( p1, p2, up );
+		p = CM_GridPlane(gridPlanes, i, j, 0);
+		if (p == -1) { // Hoyo. Added safety if CM_GridPlane returns -1. Would access planes[-1], causing crash. (Credit to iortcw team)
+			return -1;
+		}
+		VectorMA(p1, 4, planes[p].plane, up);
+		return CM_FindPlane(p1, p2, up);
 
 	case 5: // diagonal out of triangle 1
 		p1 = grid->points[i][j];
 		p2 = grid->points[i + 1][j + 1];
-		p = CM_GridPlane( gridPlanes, i, j, 1 );
-		VectorMA( p1, 4, planes[ p ].plane, up );
-		return CM_FindPlane( p1, p2, up );
-
+		p = CM_GridPlane(gridPlanes, i, j, 1);
+		if (p == -1) { // Hoyo. Added safety if CM_GridPlane returns -1. Would access planes[-1], causing crash.
+			return -1;
+		}
+		VectorMA(p1, 4, planes[p].plane, up);
+		return CM_FindPlane(p1, p2, up);
 	}
 
-	Com_Error( ERR_DROP, "CM_EdgePlaneNum: bad k" );
+	Com_Error(ERR_DROP, "CM_EdgePlaneNum: bad k");
 	return -1;
 }
 
