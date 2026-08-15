@@ -359,8 +359,14 @@ static void ResampleTexture( unsigned *in, int inwidth, int inheight, unsigned *
 	int i, j;
 	unsigned    *inrow, *inrow2;
 	unsigned frac, fracstep;
-	unsigned p1[1024], p2[1024];
+	unsigned p1[2048], p2[2048]; // Hoyo. Patched, so it matches the Q3 Arena patched version
+	//unsigned p1[1024], p2[1024]; // Hoyo.
 	byte        *pix1, *pix2, *pix3, *pix4;
+
+	// Hoyo.
+	if (outwidth > 2048) {
+		ri.Error(ERR_DROP, "ResampleTexture: max width");
+	}
 
 	fracstep = inwidth * 0x10000 / outwidth;
 
