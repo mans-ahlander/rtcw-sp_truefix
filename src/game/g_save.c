@@ -62,6 +62,7 @@ saveField structures below.
 NOTE TTimo: see show_bug.cgi?id=434 for v17 -> v18 savegames
 */
 
+#define MAX_SAVE_STRING_LENGTH 65536 // Added by Hoyo
 
 vmCvar_t musicCvar;
 char musicString[MAX_STRING_CHARS];
@@ -432,13 +433,23 @@ void ReadField( fileHandle_t f, saveField_t *field, byte *base ) {
 	switch ( field->type )
 	{
 	case F_STRING:
-		len = *(int *)p;
-		if ( !len ) {
-			*(char **)p = NULL;
-		} else
-		{
-			*(char **)p = G_Alloc( len );
-			trap_FS_Read( *(char **)p, len, f );
+		// Hoyo. Added boundary checks, similar to entity and client
+		len = *(int*)p;
+
+		if (len < 0 || len > MAX_SAVE_STRING_LENGTH) {
+			G_Error("ReadField: invalid string length (%i)", len);
+		}
+
+		if (!len) {
+			*(char**)p = NULL;
+		}
+		else {
+			*(char**)p = G_Alloc(len);
+			trap_FS_Read(*(char**)p, len, f);
+
+			if ((*(char**)p)[len - 1] != '\0') {
+				G_Error("ReadField: unterminated string");
+			}
 		}
 		break;
 	case F_ENTITY:
@@ -474,18 +485,25 @@ void ReadField( fileHandle_t f, saveField_t *field, byte *base ) {
 
 		//relative to code segment
 	case F_FUNCTION:
-		len = *(int *)p;
-		if ( !len ) {
-			*(byte **)p = NULL;
-		} else
-		{
-			//funcStr = G_Alloc (len);
-			if ( len > sizeof( funcStr ) ) {
-				G_Error( "ReadField: function name is greater than buffer (%i chars)", sizeof( funcStr ) );
+		// Hoyo. Added boundary checks, similar to entity and client
+		len = *(int*)p;
+
+		if (len < 0 || len > sizeof(funcStr)) {
+			G_Error("ReadField: invalid function name length (%i)", len);
+		}
+
+		if (!len) {
+			*(byte**)p = NULL;
+		}
+		else {
+			trap_FS_Read(funcStr, len, f);
+
+			if (funcStr[len - 1] != '\0') {
+				G_Error("ReadField: unterminated function name");
 			}
-			trap_FS_Read( funcStr, len, f );
-			if ( !( *(byte **)p = G_FindFuncByName( funcStr ) ) ) {
-				G_Error( "ReadField: unknown function '%s'\ncannot load game", funcStr );
+
+			if (!(*(byte**)p = G_FindFuncByName(funcStr))) {
+				G_Error("ReadField: unknown function '%s'\ncannot load game", funcStr);
 			}
 		}
 		break;
@@ -549,29 +567,67 @@ int G_Save_Encode( byte *raw, byte *out, int rawsize, int outsize ) {
 G_Save_Decode
 ===============
 */
-void G_Save_Decode( byte *in, int insize, byte *out, int outsize ) {
+qboolean G_Save_Decode( byte *in, int insize, byte *out, int outsize ) {
 	int incount, outcount;
 	byte count;     //DAJ was in but caused endian bugs
 	//
+
+	if (!in || !out || insize <= 0 || outsize <= 0) { // Hoyo. Added check for valid parameters
+		return qfalse;
+	}
+
 	incount = 0;
 	outcount = 0;
 	while ( incount < insize ) {
+		// Hoyo. Make sure the encoded count byte exists.
+		if (incount + SAVE_ENCODE_COUNT_BYTES > insize) {
+			return qfalse;
+		}
+
 		// read the count
 		count = 0;
 		memcpy( &count, in + incount, SAVE_ENCODE_COUNT_BYTES );
 		incount += SAVE_ENCODE_COUNT_BYTES;
+
 		// if it's negative, zero it out
 		if ( count & ( 1 << ( ( SAVE_ENCODE_COUNT_BYTES * 8 ) - 1 ) ) ) {
 			count &= ~( 1 << ( ( SAVE_ENCODE_COUNT_BYTES * 8 ) - 1 ) );
+
+			if (!count) {
+				return qfalse;
+			}
+
+			if (outcount + count > outsize) {
+				return qfalse;
+			}
+
 			memset( out + outcount, 0, count );
 			outcount += count;
 		} else {
+			if (!count) {
+				return qfalse;
+			}
+
+			if (incount + count > insize) {
+				return qfalse;
+			}
+
+			if (outcount + count > outsize) {
+				return qfalse;
+			}
+
 			// copy the data from "in"
 			memcpy( out + outcount, in + incount, count );
 			outcount += count;
 			incount += count;
 		}
 	}
+
+	if (outcount != outsize) {
+		return qfalse;
+	}
+
+	return qtrue;
 }
 
 //=========================================================
@@ -634,17 +690,30 @@ void ReadClient( fileHandle_t f, gclient_t *client, int size ) {
 	gentity_t   *ent;
 	int decodedSize;
 
+	// Hoyo. Check for valid parameters
+	if (size <= 0 || size > sizeof(temp)) {
+		G_Error("G_LoadGame: invalid gclient_t size (%i, max %i)",
+			size, (int)sizeof(temp));
+	}
+
+	memset(&temp, 0, sizeof(temp));
+
 	if ( ver == 10 ) {
 		trap_FS_Read( &temp, size, f );
 	} else {
 		// read the encoded chunk
 		trap_FS_Read( &decodedSize, sizeof( int ), f );
-		if ( decodedSize > sizeof( clientBuf ) ) {
-			G_Error( "G_LoadGame: encoded chunk is greater than buffer" );
+
+		// Hoyo. Add two-sided boundary check and check if save G_Save_Decode, successful.
+		if (decodedSize <= 0 || decodedSize > sizeof(clientBuf)) {
+			G_Error("G_LoadGame: invalid client chunk size (%i)", decodedSize);
 		}
-		trap_FS_Read( clientBuf, decodedSize, f ); \
-		// decode it
-		G_Save_Decode( clientBuf, decodedSize, (byte *)&temp, sizeof( temp ) );
+
+		trap_FS_Read(clientBuf, decodedSize, f);
+
+		if (!G_Save_Decode(clientBuf, decodedSize, (byte*)&temp, size)) { // Hoyo. Changed from "sizeof(temp)" to just "size", to allow for smaller structures of older save files
+			G_Error("G_LoadGame: corrupt encoded client data");
+		}
 	}
 
 	// convert any feilds back to the correct data
@@ -673,6 +742,10 @@ void ReadClient( fileHandle_t f, gclient_t *client, int size ) {
 	}
 	//}
 
+	// Hoyo. Validate client index before using it to access g_entities
+	if (client->ps.clientNum < 0 || client->ps.clientNum >= MAX_CLIENTS) {
+		G_Error("ReadClient: invalid clientNum (%i)", client->ps.clientNum);
+	}
 	ent = &g_entities[client->ps.clientNum];
 
 	// make sure they face the right way
@@ -792,19 +865,33 @@ void ReadEntity( fileHandle_t f, gentity_t *ent, int size ) {
 	vmCvar_t cvar;
 	int decodedSize;
 
+	// Hoyo. Check for valid parameters
+	if (size <= 0 || size > sizeof(temp)) {
+		G_Error("G_LoadGame: invalid gentity_t size (%i, max %i)",
+			size, (int)sizeof(temp));
+	}
+
 	backup = *ent;
+
+	memset(&temp, 0, sizeof(temp));
 
 	if ( ver == 10 ) {
 		trap_FS_Read( &temp, size, f );
 	} else {
 		// read the encoded chunk
 		trap_FS_Read( &decodedSize, sizeof( int ), f );
-		if ( decodedSize > sizeof( entityBuf ) ) {
-			G_Error( "G_LoadGame: encoded chunk is greater than buffer" );
+
+		// Hoyo. Add two-sided boundary check and check if save G_Save_Decode, successful.
+		if (decodedSize <= 0 || decodedSize > sizeof(entityBuf)) {
+			G_Error("G_LoadGame: invalid entity chunk size (%i)", decodedSize);
 		}
+
 		trap_FS_Read( entityBuf, decodedSize, f );
+
 		// decode it
-		G_Save_Decode( entityBuf, decodedSize, (byte *)&temp, sizeof( temp ) );
+		if (!G_Save_Decode(entityBuf, decodedSize, (byte*)&temp, size)) {  // Hoyo. Changed from "sizeof(temp)" to just "size", to allow for smaller structures of older save files
+			G_Error("G_LoadGame: corrupt encoded entity data");
+		}
 	}
 
 	// convert any fields back to the correct data
@@ -957,17 +1044,32 @@ void ReadCastState( fileHandle_t f, cast_state_t *cs, int size ) {
 	cast_state_t temp;
 	int decodedSize;
 
+	// Hoyo. Check for valid parameters
+	if (size <= 0 || size > sizeof(temp)) {
+		G_Error("G_LoadGame: invalid cast_state_t size (%i, max %i)",
+			size, (int)sizeof(temp));
+	}
+
+	memset(&temp, 0, sizeof(temp));
+
 	if ( ver == 10 ) {
 		trap_FS_Read( &temp, size, f );
 	} else {
 		// read the encoded chunk
 		trap_FS_Read( &decodedSize, sizeof( int ), f );
-		if ( decodedSize > sizeof( castStateBuf ) ) {
-			G_Error( "G_LoadGame: encoded chunk is greater than buffer" );
+
+		// Hoyo. Add two-sided boundary check and check if save G_Save_Decode, successful.
+		if (decodedSize <= 0 || decodedSize > sizeof(castStateBuf)) {
+			G_Error("G_LoadGame: invalid cast_state chunk size (%i)",
+				decodedSize);
 		}
+
 		trap_FS_Read( castStateBuf, decodedSize, f ); \
+
 		// decode it
-		G_Save_Decode( castStateBuf, decodedSize, (byte *)&temp, sizeof( temp ) );
+		if (!G_Save_Decode(castStateBuf, decodedSize, (byte*)&temp, size)) { // Hoyo. Changed from "sizeof(temp)" to just "size", to allow for smaller structures of older save files
+			G_Error("G_LoadGame: corrupt encoded cast_state data");
+		}
 	}
 
 	// convert any feilds back to the correct data
@@ -986,7 +1088,17 @@ void ReadCastState( fileHandle_t f, cast_state_t *cs, int size ) {
 	memcpy( cs, &temp, size );
 
 	// if this is an AI, init the cur_ps
-	if ( cs->bs && !cs->deathTime ) {
+	if (cs->bs && !cs->deathTime) {
+		// Hoyo. Validate entity index before accessing g_entities
+		if (cs->entityNum < 0 || cs->entityNum >= MAX_CLIENTS) {
+			G_Error("ReadCastState: invalid entityNum (%i)", cs->entityNum);
+		}
+
+		// Hoyo. Add a check here too. Just in case
+		if (!g_entities[cs->entityNum].client) {
+			G_Error("ReadCastState: client is NULL for entity %i", cs->entityNum);
+		}
+
 		// clear out the delta_angles
 		memset( g_entities[cs->entityNum].client->ps.delta_angles, 0, sizeof( g_entities[cs->entityNum].client->ps.delta_angles ) );
 		VectorCopy( cs->ideal_viewangles, cs->viewangles );
@@ -1421,6 +1533,7 @@ void G_LoadGame( char *filename ) {
 
 	// read the version
 	trap_FS_Read( &i, sizeof( i ), f );
+
 	// TTimo
 	// show_bug.cgi?id=434
 	// 17 is the only version actually out in the wild
@@ -1464,8 +1577,15 @@ void G_LoadGame( char *filename ) {
 	// read the info string length
 	trap_FS_Read( &i, sizeof( i ), f );
 
+	// Hoyo. Added boundary check
+	if (i <= 0 || i > sizeof(infoString)) {
+		trap_FS_FCloseFile(f);
+		G_Error("G_LoadGame: invalid info string length (%i)", i);
+	}
+
 	// read the info string
 	trap_FS_Read( infoString, i, f );
+	infoString[sizeof(infoString) - 1] = '\0'; // Hoyo. Make sureit is null-terminated
 
 	if ( ver >= SA_MOVEDSTUFF ) {
 		if ( ver > SA_ADDEDMUSIC ) {
@@ -1493,9 +1613,16 @@ void G_LoadGame( char *filename ) {
 
 			// get length
 			trap_FS_Read( &i, sizeof( i ), f );
+
+			// Hoyo. Added boundary check
+			if (i < 0 || i >= sizeof(infoString)) {
+				trap_FS_FCloseFile(f);
+				G_Error("G_LoadGame: invalid fog string length (%i)", i);
+			}
+
 			// get fog string
 			trap_FS_Read( infoString, i, f );
-			infoString[i] = 0;
+			infoString[i] = '\0';
 
 			// set the configstring so the 'savegame current' has good fog
 
@@ -1540,6 +1667,14 @@ void G_LoadGame( char *filename ) {
 	// read the entity structures
 	trap_FS_Read( &i, sizeof( i ), f );
 	size = i;
+
+	// Hoyo. Added boundary checks
+	if (size <= 0 || size > sizeof(gentity_t)) {
+		trap_FS_FCloseFile(f);
+		G_Error("G_LoadGame: invalid gentity_t size (%i, max %i)",
+			size, (int)sizeof(gentity_t));
+	}
+
 	last = 0;
 	while ( 1 )
 	{
@@ -1581,15 +1716,24 @@ void G_LoadGame( char *filename ) {
 	// read the client structures
 	trap_FS_Read( &i, sizeof( i ), f );
 	size = i;
+
+	// Hoyo. Added boundary checks
+	if (size <= 0 || size > sizeof(gclient_t)) {
+		trap_FS_FCloseFile(f);
+		G_Error("G_LoadGame: invalid gclient_t size (%i, max %i)",
+			size, (int)sizeof(gclient_t));
+	}
+
 	while ( 1 )
 	{
 		trap_FS_Read( &i, sizeof( i ), f );
 		if ( i < 0 ) {
 			break;
 		}
-		if ( i > MAX_CLIENTS ) {
-			trap_FS_FCloseFile( f );
-			G_Error( "G_LoadGame: clientnum out of range\n" );
+		if (i >= MAX_CLIENTS) { // Hoyo. Off-by-one error (was >)
+			trap_FS_FCloseFile(f);
+			G_Error("G_LoadGame: clientnum out of range (%i, MAX = %i)",
+				i, MAX_CLIENTS);
 		}
 		cl = &level.clients[i];
 		if ( cl->pers.connected == CON_DISCONNECTED ) {
@@ -1602,15 +1746,24 @@ void G_LoadGame( char *filename ) {
 	// read the cast_state structures
 	trap_FS_Read( &i, sizeof( i ), f );
 	size = i;
+
+	// Hoyo. Added boundary checks
+	if (size <= 0 || size > sizeof(cast_state_t)) {
+		trap_FS_FCloseFile(f);
+		G_Error("G_LoadGame: invalid cast_state_t size (%i, max %i)",
+			size, (int)sizeof(cast_state_t));
+	}
+
 	while ( 1 )
 	{
 		trap_FS_Read( &i, sizeof( i ), f );
 		if ( i < 0 ) {
 			break;
 		}
-		if ( i > MAX_CLIENTS ) {
-			trap_FS_FCloseFile( f );
-			G_Error( "G_LoadGame: clientnum out of range\n" );
+		if (i >= MAX_CLIENTS) { // Hoyo. Off-by-one error (was >)
+			trap_FS_FCloseFile(f);
+			G_Error("G_LoadGame: cast clientnum out of range (%i, MAX = %i)",
+				i, MAX_CLIENTS);
 		}
 		cs = &caststates[i];
 		ReadCastState( f, cs, size );
