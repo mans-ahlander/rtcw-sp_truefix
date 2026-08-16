@@ -814,7 +814,7 @@ SAVE
 ==============================================================
 */
 
-#define SAVE_VERSION    18
+#define SAVE_VERSION    19 // Hoyo. Updated to 19, from 18 (version 1.42d). Adding missing pointers into structure.
 #define SAVE_INFOSTRING_LENGTH  256
 
 
