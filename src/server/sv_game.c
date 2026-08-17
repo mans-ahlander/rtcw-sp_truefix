@@ -467,6 +467,13 @@ int SV_GameSystemCalls( int *args ) {
 	case G_GETTAG:
 		return SV_GetTag( args[1], VMA( 2 ), VMA( 3 ) );
 
+	case G_SPEEDRUN_STATE: // Hoyo added
+		SV_SpeedrunSetState((unsigned int)args[1], args[2] ? qtrue : qfalse);
+		return 0;
+	case G_SPEEDRUN_TRANSITION: // Hoyo added
+		SV_SpeedrunTransition();
+		return 0;
+
 		//====================================
 
 	case BOTLIB_SETUP:

@@ -176,6 +176,13 @@ int trap_PointContents( const vec3_t point, int passEntityNum ) {
 	return syscall( G_POINT_CONTENTS, point, passEntityNum );
 }
 
+void trap_SpeedrunState(int flag, qboolean enabled) { // Hoyo. Added
+	syscall(G_SPEEDRUN_STATE, flag, enabled);
+}
+
+void trap_SpeedrunTransition(void) { // Hoyo. Added
+	syscall(G_SPEEDRUN_TRANSITION);
+}
 
 qboolean trap_InPVS( const vec3_t p1, const vec3_t p2 ) {
 	return syscall( G_IN_PVS, p1, p2 );

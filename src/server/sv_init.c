@@ -635,7 +635,10 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	int checksum;
 	qboolean isBot;
 	char systemInfo[MAX_INFO_STRING];
-	const char  *p;
+	const char* p;
+
+	// Hoyo - a real new map is starting
+	SV_SpeedrunNewMap( server );
 
 	// Ridah, enforce maxclients in single player, so there is enough room for AI characters
 	{

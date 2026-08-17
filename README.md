@@ -5,15 +5,7 @@ A conservative patch for the single-player version of Return to Castle Wolfenste
 The goal of this project is to improve stability and fix crashes, memory corruption, invalid accesses, 
 and other genuine engine bugs while preserving the original game's gameplay and physics as closely as possible.
 
-The project also includes a small number of features useful for RTCW speedrunning, such as:
-
-- top-right HUD scale/color/shadow cvars
-- speed display
-- speed gain indicator      (sv_cheats protected)
-- savepos/loadpos commands  (sv_cheats protected)
-    - Example:
-        - bind n savepos
-        - bind m loadpos
+The project also includes a small number of features useful for RTCW speedrunning, and a built-in telemetry system for easy LiveSplit ASL script integration.
 
 Gameplay-affecting changes are intentionally avoided, even when the original behavior may be considered a bug, unless changing it is necessary for stability.
 
@@ -28,9 +20,8 @@ Follow the build instructions from the original RTCW-SP source release:
 
 https://github.com/id-Software/RTCW-SP
 
-The Visual Studio project files in this repository have been converted
-to a modern Visual Studio format. Open `src\wolf.sln` and build the
-`wolf.vcxproj` project.
+The Visual Studio project files in this repository have been converted to a modern Visual Studio format. 
+Open `src\wolf.sln` and build the `wolf.vcxproj` project.
 
 Game data is not included in this repository.
 A legal RTCW installation is required to run the resulting binaries.
@@ -44,10 +35,12 @@ to preserve the behavior of the original game as closely as possible.
 
 - id Software — Return to Castle Wolfenstein and the original GPL source release
     - Reference: https://github.com/id-Software/RTCW-SP
-- Knightmare — unofficial RTCW patch 1.42d with numerous stability/compatibility fixes and new features
+- Knightmare — The unofficial RTCW patch 1.42d with numerous stability/compatibility fixes and new features was used as a foundation for TrueFix
     - Source: https://www.markshan.com/knightmare/downloads.htm
 - KoRrNiK — RTCW speedrun patch and selected fixes incorporated
     - Source: https://github.com/KoRrNiK/RtCW-Patch_Speedrun
+- iortcw — Serveral stability/compatibility fixes was taken from the unofficial RTCW patch "iortcw"
+    - Source: https://github.com/iortcw/iortcw
 
 ## License
 

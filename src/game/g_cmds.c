@@ -28,6 +28,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "km_cvar.h"	// Knightmare added
+#include "../server/speedrun.h" // Hoyo added
 
 /*
 ==================
@@ -1302,6 +1303,7 @@ void Cmd_LoadPos_f(gentity_t* ent) {
 
 /*
 =================
+Added by Hoyo
 Cmd_SetViewpos_f
 =================
 */
@@ -1333,6 +1335,150 @@ void Cmd_SetViewpos_f(gentity_t* ent) {
 
 /*
 =================
+Added by Hoyo
+Speedrun cvar verification
+=================
+*/
+typedef struct {
+	const char* name;
+	const char* expected;
+} speedrunCvarCheck_t;
+
+static qboolean G_CheckSpeedrunCvar(const speedrunCvarCheck_t* check) {
+	char value[MAX_CVAR_VALUE_STRING];
+
+	trap_Cvar_VariableStringBuffer(
+		check->name,
+		value,
+		sizeof(value)
+	);
+
+	if (Q_stricmp(value, check->expected) != 0) {
+		G_Printf(
+			"FAIL: %s = \"%s\" (expected \"%s\")\n",
+			check->name,
+			value,
+			check->expected
+		);
+
+		return qfalse;
+	}
+
+	G_Printf(" OK: %s = \"%s\"\n", check->name, value);
+
+	return qtrue;
+}
+
+/*
+=================
+Added by Hoyo
+Cmd_CvarCheck_f
+=================
+*/
+void Cmd_CvarCheck_f(gentity_t* ent) {
+	qboolean valid = qtrue;
+
+	static const speedrunCvarCheck_t checks[] = {
+
+		// Standard config
+		{ "g_speed", "320" },
+		{ "g_gravity", "800" },
+		{ "timescale", "1" },
+
+		// Knightmare - game balancing cvars
+
+		// Health / armor / ammo behavior
+		{ "sk_rot_health", "0" },
+		{ "sk_rot_armor", "0" },
+		{ "sk_brandy_ignore_max_health", "0" },
+		{ "sk_dropped_weapon_min_ammo", "0.25" },
+
+		// Maximum health / armor / ammo
+		{ "sk_max_mega_health", "200" },
+		{ "sk_max_armor", "100" },
+		{ "sk_max_9mm", "300" },
+		{ "sk_max_45cal", "300" },
+		{ "sk_max_792mm", "200" },
+		{ "sk_max_30cal", "20" },
+		{ "sk_max_127mm", "1000" },
+		{ "sk_max_pf_rockets", "5" },
+		{ "sk_max_fuel", "150" },
+		{ "sk_max_cells", "300" },
+		{ "sk_max_grenades", "15" },
+		{ "sk_max_pineapples", "15" },
+		{ "sk_max_dynamite", "10" },
+
+		// Player damage
+		{ "sk_plr_dmg_knife", "5" },
+		{ "sk_plr_dmg_kick", "15" },
+		{ "sk_plr_dmg_luger", "6" },
+		{ "sk_plr_dmg_colt", "8" },
+		{ "sk_plr_dmg_mp40", "6" },
+		{ "sk_plr_dmg_thompson", "8" },
+		{ "sk_plr_dmg_sten", "10" },
+		{ "sk_plr_dmg_mauser", "20" },
+		{ "sk_plr_dmg_sniperrifle", "55" },
+		{ "sk_plr_dmg_garand", "25" },
+		{ "sk_plr_dmg_snooperscope", "25" },
+		{ "sk_plr_dmg_fg42", "20" },
+		{ "sk_plr_dmg_fg42scope", "35" },
+		{ "sk_plr_dmg_panzerfaust", "200" },
+		{ "sk_plr_dmg_panzerfaust_splash", "200" },
+		{ "sk_plr_dmg_venom", "12" },
+		{ "sk_plr_dmg_flamethrower", "2" },
+		{ "sk_plr_dmg_tesla", "8" },
+		{ "sk_plr_dmg_grenade", "200" },
+		{ "sk_plr_dmg_grenade_radius", "150" },
+		{ "sk_plr_dmg_pineapple", "160" },
+		{ "sk_plr_dmg_pineapple_radius", "300" },
+		{ "sk_plr_dmg_dynamite", "800" },
+		{ "sk_plr_dmg_dynamite_radius", "400" },
+
+		// AI damage
+		{ "sk_ai_dmg_knife", "5" },
+		{ "sk_ai_dmg_luger", "6" },
+		{ "sk_ai_dmg_colt", "8" },
+		{ "sk_ai_dmg_mp40", "6" },
+		{ "sk_ai_dmg_thompson", "8" },
+		{ "sk_ai_dmg_sten", "8" },
+		{ "sk_ai_dmg_mauser", "20" },
+		{ "sk_ai_dmg_sniperrifle", "50" },
+		{ "sk_ai_dmg_garand", "20" },
+		{ "sk_ai_dmg_snooperscope", "25" },
+		{ "sk_ai_dmg_fg42", "15" },
+		{ "sk_ai_dmg_fg42scope", "15" },
+		{ "sk_ai_dmg_panzerfaust", "100" },
+		{ "sk_ai_dmg_panzerfaust_splash", "120" },
+		{ "sk_ai_dmg_venom", "10" },
+		{ "sk_ai_dmg_flamethrower", "1" },
+		{ "sk_ai_dmg_tesla", "4" },
+		{ "sk_ai_dmg_grenade", "100" },
+		{ "sk_ai_dmg_grenade_radius", "150" },
+		{ "sk_ai_dmg_pineapple", "80" },
+		{ "sk_ai_dmg_pineapple_radius", "300" },
+		{ "sk_ai_dmg_dynamite", "400" },
+		{ "sk_ai_dmg_dynamite_radius", "400" },
+	};
+
+	int i;
+	for (i = 0; i < sizeof(checks) / sizeof(checks[0]); i++) {
+		if (!G_CheckSpeedrunCvar(&checks[i])) {
+			valid = qfalse;
+		}
+	}
+
+	if (valid) {
+		trap_SendServerCommand(ent - g_entities, "cp \"SPEEDRUN CVAR CHECK: PASS\"");
+		G_Printf("SPEEDRUN CVAR CHECK: PASS\n");
+	}
+	else {
+		trap_SendServerCommand(ent - g_entities, "cp \"SPEEDRUN CVAR CHECK: FAIL\"");
+		G_Printf("SPEEDRUN CVAR CHECK: FAIL\n");
+	}
+}
+
+/*
+=================
 Cmd_StartCamera_f
 =================
 */
@@ -1346,6 +1492,8 @@ void Cmd_StartCamera_f(gentity_t* ent) {
 	// (SA) trying this in client to avoid 1 frame of player drawing
 	//	ent->client->ps.eFlags |= EF_NODRAW;
 	//	ent->s.eFlags |= EF_NODRAW;
+
+	trap_SpeedrunState(SR_STATE_CUTSCENE, qtrue); // Hoyo. Added for speedrunning ASL script
 }
 
 /*
@@ -1364,6 +1512,8 @@ void Cmd_StopCamera_f(gentity_t* ent) {
 		ent->client->cameraPortal = NULL;
 		ent->s.eFlags &= ~EF_VIEWING_CAMERA;
 		ent->client->ps.eFlags &= ~EF_VIEWING_CAMERA;
+
+		trap_SpeedrunState(SR_STATE_CUTSCENE, qfalse); // Hoyo. Added for speedrunning ASL script
 
 		// (SA) trying this in client to avoid 1 frame of player drawing
 		//		ent->s.eFlags &= ~EF_NODRAW;
@@ -2296,6 +2446,9 @@ void ClientCommand(int clientNum) {
 	}
 	else if (Q_stricmp(cmd, "loadpos") == 0) {
 		Cmd_LoadPos_f(ent);
+	}
+	else if (Q_stricmp(cmd, "cvarcheck") == 0) {
+		Cmd_CvarCheck_f(ent);
 	}
 	else if (Q_stricmp(cmd, "entitycount") == 0) {
 		Cmd_EntityCount_f(ent);

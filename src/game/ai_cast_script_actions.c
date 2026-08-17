@@ -43,6 +43,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../game/be_ai_goal.h"
 #include "../game/be_ai_move.h"
 #include "../botai/botai.h"          //bot ai interface
+#include "../server/speedrun.h"
 
 #include "ai_cast.h"
 
@@ -117,8 +118,21 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 		G_Error( "AI scripting: gotomarker must have an targetname\n" );
 	}
 
+	// Hoyo. Safeguard just in case, and log. Trying to investigate reason for boss1, forest script bugs.
+	if (cs->castScriptStatus.scriptGotoEnt >= MAX_GENTITIES) {
+		G_Printf(
+			"WARNING: invalid scriptGotoEnt %i for AI %i, resetting scripted movement\n",
+			cs->castScriptStatus.scriptGotoEnt,
+			cs->entityNum
+		);
+
+		cs->castScriptStatus.scriptGotoEnt = -1;
+		cs->castScriptStatus.scriptGotoId = -1;
+	}
+
 	// if we already are going to the marker, just use that, and check if we're in range
 	if ( cs->castScriptStatus.scriptGotoEnt >= 0 && cs->castScriptStatus.scriptGotoId == cs->thinkFuncChangeTime ) {
+
 		ent = &g_entities[cs->castScriptStatus.scriptGotoEnt];
 		if ( ent->targetname && !Q_strcasecmp( ent->targetname, token ) ) {
 			// if we're not slowing down, then check for passing the marker, otherwise check distance only
@@ -2360,6 +2374,11 @@ qboolean AICast_ScriptAction_ChangeLevel( cast_state_t *cs, char *params ) {
 	trap_SetConfigstring( CS_SCREENFADE, va( "1 %i %i", level.time + 250, 750 + exitTime ) ); // fade out screen
 
 	trap_SendServerCommand( -1, va( "snd_fade 0 %d", 1000 + exitTime ) ); //----(SA)	added
+
+	// Hoyo - speedrun split point:
+	// gameplay has ended and the level transition has committed
+	trap_SpeedrunState(SR_STATE_LEVEL_TRANSITION, qtrue);
+	trap_SpeedrunTransition();
 
 	// load the next map, after a delay
 	level.reloadDelayTime = level.time + 1000 + exitTime;

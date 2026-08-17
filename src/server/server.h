@@ -32,6 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../qcommon/qcommon.h"
 #include "../game/g_public.h"
 #include "../game/bg_public.h"
+#include "speedrun.h"
 
 //=============================================================================
 
@@ -253,6 +254,16 @@ extern cvar_t  *sv_gameskill;
 // done
 
 extern cvar_t  *sv_reloading;   //----(SA)	added
+
+// Hoyo - speedrun timing interface
+//
+// speedrun.c
+//
+extern speedrunState_t g_speedrunState;
+
+void SV_SpeedrunSetState(unsigned int flag, qboolean enabled);
+void SV_SpeedrunTransition(void);
+void SV_SpeedrunNewMap(const char* mapName);
 
 //===========================================================
 

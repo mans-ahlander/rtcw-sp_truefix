@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "km_cvar.h"	// Knightmare added
+#include "../server/speedrun.h" // Hoyo added
 
 level_locals_t level;
 
@@ -1347,6 +1348,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_InitMemory();
 
+	// Hoyo. Reset speedrun state
+	trap_SpeedrunState(SR_STATE_LEVEL_TRANSITION, qfalse);
+	trap_SpeedrunState(SR_STATE_CUTSCENE, qfalse);
+
 	// Knightmare- init max ammo here
 	BG_InitAmmoTable();
 
@@ -2487,6 +2492,10 @@ void CheckReloadStatus( void ) {
 				trap_Cvar_Set( "g_reloading", "0" );
 				level.reloadPauseTime = 0;
 			}
+
+			// Hoyo - speedrun load timing
+			// RTCW's post-load pause is finished and gameplay resumes.
+			trap_SpeedrunState(SR_STATE_LOADING, qfalse);
 		}
 	}
 }

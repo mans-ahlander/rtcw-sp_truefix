@@ -164,6 +164,9 @@
     <ClCompile Include="win32\win_wndproc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="server\speedrun.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="A3D\a3dWrapperdp.h">
