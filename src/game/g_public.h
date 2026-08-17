@@ -248,6 +248,9 @@ typedef enum {
 
 	G_GETTAG,
 
+	G_SPEEDRUN_STATE, // Hoyo added
+	G_SPEEDRUN_TRANSITION, // Hoyo added
+
 	BOTLIB_SETUP = 200,             // ( void );
 	BOTLIB_SHUTDOWN,                // ( void );
 	BOTLIB_LIBVAR_SET,

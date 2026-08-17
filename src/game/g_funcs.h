@@ -495,6 +495,8 @@
 {"trap_AdjustAreaPortalState", (byte *)trap_AdjustAreaPortalState},
 {"trap_InPVSIgnorePortals", (byte *)trap_InPVSIgnorePortals},
 {"trap_InPVS", (byte *)trap_InPVS},
+{"trap_SpeedrunTransition", (byte *)trap_SpeedrunTransition},
+{"trap_SpeedrunState", (byte *)trap_SpeedrunState},
 {"trap_PointContents", (byte *)trap_PointContents},
 {"trap_TraceCapsule", (byte *)trap_TraceCapsule},
 {"trap_Trace", (byte *)trap_Trace},

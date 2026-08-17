@@ -188,6 +188,7 @@
     <ClCompile Include="qcommon\vm.c" />
     <ClCompile Include="qcommon\vm_interpreted.c" />
     <ClCompile Include="qcommon\vm_x86.c" />
+    <ClCompile Include="server\speedrun.c" />
     <ClCompile Include="server\sv_bot.c" />
     <ClCompile Include="server\sv_ccmds.c" />
     <ClCompile Include="server\sv_client.c" />

@@ -38,7 +38,6 @@ These commands can only be entered from stdin or by a remote operator datagram
 ===============================================================================
 */
 
-
 /*
 ==================
 SV_GetPlayerByName
@@ -278,6 +277,10 @@ static void SV_Map_f( void ) {
 	// and thus nuke the arguments of the map command
 	Q_strncpyz( mapname, map, sizeof( mapname ) );
 
+	// Hoyo - speedrun load timing
+	// A real map load is beginning.
+	SV_SpeedrunSetState(SR_STATE_LOADING, qtrue);
+
 	// start up the map
 	SV_SpawnServer( mapname, killBots );
 
@@ -505,6 +508,7 @@ void    SV_LoadGame_f( void ) {
 			Cvar_Set( "savegame_loading", "2" );  // 2 means it's a restart, so stop rendering until we are loaded
 			// set the filename
 			Cvar_Set( "savegame_filename", filename );
+
 			// quick-restart the server
 			SV_MapRestart_f();  // savegame will be loaded after restart
 

@@ -29,6 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "km_cvar.h"	// Knightmare added
+#include "../server/speedrun.h" // Hoyo added
 
 #include "ai_cast_fight.h"   // need these for avoidance
 
@@ -793,6 +794,8 @@ void ClientThink_real( gentity_t *ent ) {
 	int monsterslick = 0;
 	vec3_t muzzlebounce;      // JPW NERVE
 
+	// Hoyo
+	qboolean speedrunControlLocked = qfalse;
 
 	// Rafael wolfkick
 	int validkick;
@@ -960,6 +963,8 @@ void ClientThink_real( gentity_t *ent ) {
 			ucmd->wbuttons = 0;
 			ucmd->wolfkick = 0;
 
+			speedrunControlLocked = qtrue;
+
 		} else {    // age their play time
 
 			//AICast_AgePlayTime( ent->s.number );
@@ -976,6 +981,8 @@ void ClientThink_real( gentity_t *ent ) {
 		ucmd->wbuttons = 0;
 		ucmd->wolfkick = 0;
 
+		speedrunControlLocked = qtrue;
+
 		// freeze player (RELOAD_FAILED still allowed to move/look)
 		if ( client->cameraPortal || ( g_reloading.integer & ( RELOAD_NEXTMAP_WAITING | RELOAD_ENDGAME ) ) ) {
 			VectorClear( client->ps.velocity );
@@ -988,6 +995,20 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.pm_type = PM_DEAD;
 	} else {
 		client->ps.pm_type = PM_NORMAL;
+	}
+
+	// Hoyo - speedrun telemetry.
+	// Only report the human player, not cast AI clients.
+	if (!(ent->r.svFlags & SVF_CASTAI)) {
+		trap_SpeedrunState(
+			SR_STATE_PLAYER_FROZEN,
+			client->ps.pm_type == PM_FREEZE
+		);
+
+		trap_SpeedrunState(
+			SR_STATE_CONTROL_LOCKED,
+			speedrunControlLocked
+		);
 	}
 
 	// set parachute anim condition flag

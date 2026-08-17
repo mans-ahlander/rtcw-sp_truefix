@@ -28,6 +28,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "km_cvar.h"	// Knightmare added
+#include "../server/speedrun.h" // Hoyo added
 
 /*
 ==================
@@ -1491,6 +1492,8 @@ void Cmd_StartCamera_f(gentity_t* ent) {
 	// (SA) trying this in client to avoid 1 frame of player drawing
 	//	ent->client->ps.eFlags |= EF_NODRAW;
 	//	ent->s.eFlags |= EF_NODRAW;
+
+	trap_SpeedrunState(SR_STATE_CUTSCENE, qtrue); // Hoyo. Added for speedrunning ASL script
 }
 
 /*
@@ -1509,6 +1512,8 @@ void Cmd_StopCamera_f(gentity_t* ent) {
 		ent->client->cameraPortal = NULL;
 		ent->s.eFlags &= ~EF_VIEWING_CAMERA;
 		ent->client->ps.eFlags &= ~EF_VIEWING_CAMERA;
+
+		trap_SpeedrunState(SR_STATE_CUTSCENE, qfalse); // Hoyo. Added for speedrunning ASL script
 
 		// (SA) trying this in client to avoid 1 frame of player drawing
 		//		ent->s.eFlags &= ~EF_NODRAW;

@@ -495,6 +495,8 @@ extern qboolean trap_AreasConnected ( int area1 , int area2 ) ;
 extern void trap_AdjustAreaPortalState ( gentity_t * ent , qboolean open ) ;
 extern qboolean trap_InPVSIgnorePortals ( const vec3_t p1 , const vec3_t p2 ) ;
 extern qboolean trap_InPVS ( const vec3_t p1 , const vec3_t p2 ) ;
+extern void trap_SpeedrunTransition ( void ) ;
+extern void trap_SpeedrunState ( int flag , qboolean enabled ) ;
 extern int trap_PointContents ( const vec3_t point , int passEntityNum ) ;
 extern void trap_TraceCapsule ( trace_t * results , const vec3_t start , const vec3_t mins , const vec3_t maxs , const vec3_t end , int passEntityNum , int contentmask ) ;
 extern void trap_Trace ( trace_t * results , const vec3_t start , const vec3_t mins , const vec3_t maxs , const vec3_t end , int passEntityNum , int contentmask ) ;
