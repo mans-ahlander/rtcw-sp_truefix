@@ -264,11 +264,20 @@ init
 
 onStart
 {
-    vars.justStarted = true;
-    vars.initialLoadSeen = false;
-
-    timer.IsGameTimePaused = true;
+    if (settings["cat_all"])
+    {
+        vars.justStarted = false;
+        vars.initialLoadSeen = false;
+        timer.IsGameTimePaused = false;
+    }
+    else
+    {
+        vars.justStarted = true;
+        vars.initialLoadSeen = false;
+        timer.IsGameTimePaused = true;
+    }
 }
+
 
 // ------------------------------------------------------------
 // EXIT
