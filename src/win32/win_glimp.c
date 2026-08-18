@@ -872,6 +872,7 @@ static rserr_t GLW_SetMode( const char *drivername,
 ** GLW_InitExtensions
 */
 static void GLW_InitExtensions( void ) {
+	const char* extensions; // Hoyo. Store temporarily here instead of glConfig.extensions_string, which is fixed length. (Not sure if it fixes anything. Just in case)
 
 //----(SA)	moved these up
 	glConfig.textureCompression = TC_NONE;
@@ -895,11 +896,17 @@ static void GLW_InitExtensions( void ) {
 		return;
 	}
 
+	extensions = (const char*)qglGetString(GL_EXTENSIONS);
+	if (!extensions) {
+		ri.Printf(PRINT_WARNING, "...GL_EXTENSIONS returned NULL\n");
+		return;
+	}
+
 	ri.Printf( PRINT_ALL, "Initializing OpenGL extensions\n" );
 
 	// GL_S3_s3tc
 	// RF, check for GL_EXT_texture_compression_s3tc
-	if ( strstr( glConfig.extensions_string, "GL_EXT_texture_compression_s3tc" ) ) {
+	if ( strstr( extensions, "GL_EXT_texture_compression_s3tc" ) ) {
 		if ( r_ext_compressed_textures->integer ) {
 			glConfig.textureCompression = TC_EXT_COMP_S3TC;
 			ri.Printf( PRINT_ALL, "...using GL_EXT_texture_compression_s3tc\n" );
@@ -930,7 +937,7 @@ static void GLW_InitExtensions( void ) {
 	}
 
 	// GL_EXT_texture_env_add
-	if ( strstr( glConfig.extensions_string, "EXT_texture_env_add" ) ) {
+	if ( strstr(extensions, "EXT_texture_env_add" ) ) {
 		if ( r_ext_texture_env_add->integer ) {
 			glConfig.textureEnvAddAvailable = qtrue;
 			ri.Printf( PRINT_ALL, "...using GL_EXT_texture_env_add\n" );
@@ -955,7 +962,7 @@ static void GLW_InitExtensions( void ) {
 	}
 
 	// GL_ARB_multitexture
-	if ( strstr( glConfig.extensions_string, "GL_ARB_multitexture" )  ) {
+	if ( strstr( extensions, "GL_ARB_multitexture" )  ) {
 		if ( r_ext_multitexture->integer ) {
 			qglMultiTexCoord2fARB = ( PFNGLMULTITEXCOORD2FARBPROC ) qwglGetProcAddress( "glMultiTexCoord2fARB" );
 			qglActiveTextureARB = ( PFNGLACTIVETEXTUREARBPROC ) qwglGetProcAddress( "glActiveTextureARB" );
@@ -984,7 +991,7 @@ static void GLW_InitExtensions( void ) {
 	}
 
 	// GL_EXT_compiled_vertex_array
-	if ( strstr( glConfig.extensions_string, "GL_EXT_compiled_vertex_array" ) && ( glConfig.hardwareType != GLHW_RIVA128 ) ) {
+	if ( strstr( extensions, "GL_EXT_compiled_vertex_array" ) && ( glConfig.hardwareType != GLHW_RIVA128 ) ) {
 		if ( r_ext_compiled_vertex_array->integer ) {
 			ri.Printf( PRINT_ALL, "...using GL_EXT_compiled_vertex_array\n" );
 			qglLockArraysEXT = ( void ( APIENTRY * )( int, int ) )qwglGetProcAddress( "glLockArraysEXT" );
@@ -1003,7 +1010,7 @@ static void GLW_InitExtensions( void ) {
 
 	// WGL_3DFX_gamma_control
 
-	if ( strstr( glConfig.extensions_string, "WGL_3DFX_gamma_control" ) ) {
+	if ( strstr( extensions, "WGL_3DFX_gamma_control" ) ) {
 		if ( !r_ignorehwgamma->integer && r_ext_gamma_control->integer ) {
 			qwglGetDeviceGammaRamp3DFX = ( BOOL ( WINAPI * )( HDC, LPVOID ) )qwglGetProcAddress( "wglGetDeviceGammaRamp3DFX" );
 			qwglSetDeviceGammaRamp3DFX = ( BOOL ( WINAPI * )( HDC, LPVOID ) )qwglGetProcAddress( "wglSetDeviceGammaRamp3DFX" );
@@ -1030,7 +1037,7 @@ static void GLW_InitExtensions( void ) {
 
 
 	// GL_ATI_pn_triangles - ATI PN-Triangles
-	if ( strstr( glConfig.extensions_string, "GL_ATI_pn_triangles" ) ) {
+	if ( strstr( extensions, "GL_ATI_pn_triangles" ) ) {
 		if ( r_ext_ATI_pntriangles->integer ) {
 			ri.Printf( PRINT_ALL, "...using GL_ATI_pn_triangles\n" );
 
@@ -1052,7 +1059,7 @@ static void GLW_InitExtensions( void ) {
 
 
 	// GL_EXT_texture_filter_anisotropic
-	if ( strstr( glConfig.extensions_string, "GL_EXT_texture_filter_anisotropic" ) ) {
+	if ( strstr( extensions, "GL_EXT_texture_filter_anisotropic" ) ) {
 	//	if ( r_ext_texture_filter_anisotropic->integer ) {
 			// Knightmare enabled
 			glConfig.anisotropicAvailable = qtrue;
@@ -1077,7 +1084,7 @@ static void GLW_InitExtensions( void ) {
 
 
 	// GL_NV_fog_distance
-	if ( strstr( glConfig.extensions_string, "GL_NV_fog_distance" ) ) {
+	if ( strstr( extensions, "GL_NV_fog_distance" ) ) {
 		if ( r_ext_NV_fog_dist->integer ) {
 			glConfig.NVFogAvailable = qtrue;
 			ri.Printf( PRINT_ALL, "...using GL_NV_fog_distance\n" );
