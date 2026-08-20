@@ -323,6 +323,23 @@ void    trap_RB_ZombieFXAddNewHit( int entityNum, const vec3_t hitPos, const vec
 }
 // done.
 
+// <- Added by Hoyo for visualization of trigger/clip brushes
+void trap_R_AddCollisionModelToScene(
+	clipHandle_t model,
+	const vec3_t origin,
+	const vec3_t angles,
+	qhandle_t shader
+) {
+	syscall(
+		CG_R_ADDCOLLISIONMODELTOSCENE,
+		model,
+		origin,
+		angles,
+		shader
+	);
+}
+// Hoyo ->
+
 void    trap_R_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b, int overdraw ) {
 	syscall( CG_R_ADDLIGHTTOSCENE, org, PASSFLOAT( intensity ), PASSFLOAT( r ), PASSFLOAT( g ), PASSFLOAT( b ), overdraw );
 }

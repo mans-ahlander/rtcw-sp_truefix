@@ -1166,6 +1166,7 @@ extern cvar_t  *r_logFile;                      // number of frames to emit GL l
 extern cvar_t  *r_showtris;                     // enables wireframe rendering of the world
 extern cvar_t  *r_showsky;                      // forces sky in front of all surfaces
 extern cvar_t  *r_shownormals;                  // draws wireframe normals
+extern cvar_t  *r_drawPlayerClip;				// Hoyo added
 extern cvar_t  *r_clear;                        // force screen clear every frame
 
 extern cvar_t  *r_shadows;                      // controls shadows: 0 = none, 1 = blur, 2 = stencil, 3 = black planar projection
@@ -1320,6 +1321,8 @@ qboolean    R_GetEntityToken( char *buffer, int size );
 qboolean    RE_GetSkinModel( qhandle_t skinid, const char *type, char *name );
 qhandle_t   RE_GetShaderFromModel( qhandle_t modelid, int surfnum, int withlightmap );    //----(SA)
 //----(SA) end
+
+void RE_AddCollisionModelToScene(clipHandle_t handle, const vec3_t origin, const vec3_t angles,	qhandle_t shader); // Hoyo
 
 model_t     *R_AllocModel( void );
 

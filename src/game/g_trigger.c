@@ -29,6 +29,38 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 
 
+static int triggerFeedbackSound;
+
+
+/*
+================
+Added by Hoyo
+G_TriggerFeedback
+
+Give the player audio feedback when a trigger actually fires.
+================
+*/
+static void G_TriggerFeedback(gentity_t* trigger, gentity_t* activator) {
+
+	if (!g_triggerFeedback.integer) {
+		return;
+	}
+
+	// Only provide feedback for the human player.
+	// RTCW AI also use client structures.
+	if (!activator || !activator->client || activator->aiCharacter) {
+		return;
+	}
+
+	if (!triggerFeedbackSound) {
+		triggerFeedbackSound = G_SoundIndex("sound/truefix/trigger.wav");
+	}
+
+	G_AddEvent(activator, EV_GENERAL_SOUND, triggerFeedbackSound);
+
+}
+
+
 void InitTrigger( gentity_t *self ) {
 	if ( !VectorCompare( self->s.angles, vec3_origin ) ) {
 		G_SetMovedir( self->s.angles, self->movedir );
@@ -55,6 +87,8 @@ void multi_trigger( gentity_t *ent, gentity_t *activator ) {
 	if ( ent->nextthink ) {
 		return;     // can't retrigger until the wait is over
 	}
+
+	G_TriggerFeedback(ent, activator); // Added by Hoyo. Check we should do feedback
 
 	G_UseTargets( ent, ent->activator );
 

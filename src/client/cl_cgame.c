@@ -621,6 +621,9 @@ int CL_CgameSystemCalls( int *args ) {
 		re.AddPolyToScene( args[1], args[2], VMA( 3 ) );
 		return 0;
 		// Ridah
+	case CG_R_ADDCOLLISIONMODELTOSCENE: // Added by Hoyo
+		re.AddCollisionModelToScene(args[1], VMA(2), VMA(3), args[4]);
+		return 0;
 	case CG_R_ADDPOLYSTOSCENE:
 		re.AddPolysToScene( args[1], args[2], VMA( 3 ), args[4] );
 		return 0;
