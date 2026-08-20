@@ -662,6 +662,10 @@ void RE_AddCollisionModelToScene(
 
 		brush = &cm.brushes[brushnum];
 
+		if (!(brush->contents & CONTENTS_TRIGGER)) {
+			continue;
+		}
+
 		R_AddCollisionBrush(
 			brush,
 			shader,

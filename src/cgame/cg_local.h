@@ -1302,6 +1302,8 @@ typedef struct {
 	qhandle_t medalExcellent;
 	qhandle_t medalGauntlet;
 
+	qhandle_t triggerDebugShader; // Hoyo. Trigger/Clip debug visualization shader
+
 	// sounds
 	sfxHandle_t n_health;
 	sfxHandle_t noFireUnderwater;

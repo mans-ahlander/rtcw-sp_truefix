@@ -1904,12 +1904,9 @@ Draw the exact collision geometry of a normally invisible trigger brush.
 ===============
 */
 static void CG_TriggerDebug(centity_t* cent) {
-	qhandle_t triggerShader;
 	clipHandle_t model;
 
-	triggerShader = trap_R_RegisterShader("truefix_trigger");
-
-	if (!triggerShader) {
+	if (!cgs.media.triggerDebugShader) {
 		return;
 	}
 
@@ -1923,7 +1920,7 @@ static void CG_TriggerDebug(centity_t* cent) {
 		model,
 		cent->lerpOrigin,
 		cent->lerpAngles,
-		triggerShader
+		cgs.media.triggerDebugShader
 	);
 }
 

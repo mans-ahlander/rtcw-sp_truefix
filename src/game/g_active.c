@@ -334,8 +334,6 @@ void    G_TouchTriggers( gentity_t *ent ) {
 	static vec3_t range = { 40, 40, 52 };
 	qboolean trackTriggerFeedback;
 
-	memset(triggerTouchedThisFrame, 0, sizeof(triggerTouchedThisFrame));
-
 	if ( !ent->client ) {
 		return;
 	}
@@ -343,11 +341,7 @@ void    G_TouchTriggers( gentity_t *ent ) {
 	trackTriggerFeedback = (ent->s.number == 0 && !ent->aiCharacter);
 
 	if (trackTriggerFeedback) {
-		memset(
-			triggerTouchedThisFrame,
-			0,
-			sizeof(triggerTouchedThisFrame)
-		);
+		memset(triggerTouchedThisFrame, 0, sizeof(triggerTouchedThisFrame));
 	}
 
 	// dead clients don't activate triggers!
