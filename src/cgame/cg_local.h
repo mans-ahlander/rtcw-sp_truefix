@@ -1640,7 +1640,6 @@ extern vmCvar_t cg_drawHudColorGreen;
 extern vmCvar_t cg_drawHudColorBlue;
 extern vmCvar_t cg_drawHudColorAlpha;
 extern vmCvar_t cg_drawHudShadow;
-extern vmCvar_t cg_drawHudScale;
 extern vmCvar_t cg_drawSnapshot;
 extern vmCvar_t cg_draw3dIcons;
 extern vmCvar_t cg_drawIcons;

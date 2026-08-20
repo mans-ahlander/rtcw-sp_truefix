@@ -1717,8 +1717,11 @@ typedef enum {
 // Ridah, these aren't enough for cool effects
 //#define	MAX_POLYS		256
 //#define	MAX_POLYVERTS	1024
-#define MAX_POLYS       4096
-#define MAX_POLYVERTS   8192
+// Hoyo, not enough if we want to debug player clip brushes etc.
+//#define MAX_POLYS       4096
+//#define MAX_POLYVERTS   8192
+#define MAX_POLYS       8192
+#define MAX_POLYVERTS   16384
 // done.
 
 // all of the information needed by the back end must be
