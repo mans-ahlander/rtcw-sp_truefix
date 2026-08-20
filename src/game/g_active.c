@@ -340,11 +340,22 @@ void    G_TouchTriggers( gentity_t *ent ) {
 	trace_t trace;
 	vec3_t mins, maxs;
 	static vec3_t range = { 40, 40, 52 };
+	qboolean trackTriggerFeedback;
 
 	memset(triggerTouchedThisFrame, 0, sizeof(triggerTouchedThisFrame));
 
 	if ( !ent->client ) {
 		return;
+	}
+
+	trackTriggerFeedback = (ent->s.number == 0 && !ent->aiCharacter);
+
+	if (trackTriggerFeedback) {
+		memset(
+			triggerTouchedThisFrame,
+			0,
+			sizeof(triggerTouchedThisFrame)
+		);
 	}
 
 	// dead clients don't activate triggers!
@@ -391,7 +402,8 @@ void    G_TouchTriggers( gentity_t *ent ) {
 			}
 		}
 
-		if (hit->r.bmodel &&
+		if (trackTriggerFeedback &&
+			hit->r.bmodel &&
 			hit->s.number >= 0 &&
 			hit->s.number < MAX_GENTITIES) {
 
@@ -413,11 +425,13 @@ void    G_TouchTriggers( gentity_t *ent ) {
 		}
 	}
 
-	memcpy(
-		triggerWasTouched,
-		triggerTouchedThisFrame,
-		sizeof(triggerWasTouched)
-	);
+	if (trackTriggerFeedback) {
+		memcpy(
+			triggerWasTouched,
+			triggerTouchedThisFrame,
+			sizeof(triggerWasTouched)
+		);
+	}
 }
 
 /*

@@ -532,7 +532,6 @@ static void R_AddPlayerClipWinding(const winding_t* w, qhandle_t shader) {
 }
 
 
-
 /*
 =====================
 R_AddPlayerClipBrush
