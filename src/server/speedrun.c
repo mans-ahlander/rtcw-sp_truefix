@@ -33,8 +33,6 @@ void SV_SpeedrunSetState(unsigned int flag, qboolean enabled) {
 		return;
 	}
 
-	oldFlags = g_speedrunState.flags;
-	auto test2 = &g_speedrunState;
 	if (enabled) {
 		g_speedrunState.flags |= flag;
 	}
@@ -70,7 +68,7 @@ void SV_SpeedrunSetState(unsigned int flag, qboolean enabled) {
 
 		// auto test = &g_speedrunState;
 		SR_DEBUG(
-			"SPEEDRUN: NEW MAP %s  mapSequence=%u  transitionSequence=%u  flags=0x%X\n",
+			"SPEEDRUN: STATE %s  mapSequence=%u  transitionSequence=%u  flags=0x%X\n",
 			g_speedrunState.mapName,
 			g_speedrunState.mapSequence,
 			g_speedrunState.transitionSequence,
