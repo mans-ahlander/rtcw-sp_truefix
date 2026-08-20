@@ -1251,7 +1251,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.selectShader = trap_R_RegisterShader( "gfx/2d/select" );
 
 	cgs.media.triggerDebugShader = trap_R_RegisterShader("truefix_trigger"); // Hoyo. Added for trigger debug visualization
-
+	CG_Printf("REGISTER triggerDebugShader = %i\n", cgs.media.triggerDebugShader);
 
 	cgs.media.hintShaders[HINT_ACTIVATE]            = trap_R_RegisterShader( "gfx/2d/usableHint" );
 	cgs.media.hintShaders[HINT_NOACTIVATE]          = trap_R_RegisterShader( "gfx/2d/notUsableHint" );
