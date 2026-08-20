@@ -28,6 +28,7 @@ If you have questions concerning this license or the applicable additional terms
 
 
 #include "tr_local.h"
+#include "../qcommon/cm_local.h"
 
 int r_firstSceneDrawSurf;
 
@@ -394,6 +395,161 @@ void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float sca
 	cor->flags = flags;
 }
 
+
+/*
+=====================
+R_PlayerClipInRange
+Added by Hoyo.
+
+Checks if a player is within 2048 range of a brush
+=====================
+*/
+static qboolean R_PlayerClipInRange( const cbrush_t *brush, const vec3_t origin ) {
+    vec3_t nearest;
+    vec3_t delta;
+    int i;
+
+    for ( i = 0; i < 3; i++ ) {
+        if ( origin[i] < brush->bounds[0][i] ) {
+            nearest[i] = brush->bounds[0][i];
+        } else if ( origin[i] > brush->bounds[1][i] ) {
+            nearest[i] = brush->bounds[1][i];
+        } else {
+            nearest[i] = origin[i];
+        }
+    }
+
+    VectorSubtract( nearest, origin, delta );
+
+    return DotProduct( delta, delta ) <= ( 2048.0f * 2048.0f );
+}
+
+
+/*
+=====================
+R_AddPlayerClipBox
+Added by Hoyo.
+
+Draws an axis-aligned collision brush bounding box.
+=====================
+*/
+static void R_AddPlayerClipBox(const vec3_t mins, const vec3_t maxs, qhandle_t shader) {
+	polyVert_t verts[4];
+
+#define SETVERT( n, x, y, z )                       \
+    do {                                             \
+        verts[n].xyz[0] = ( x );                    \
+        verts[n].xyz[1] = ( y );                    \
+        verts[n].xyz[2] = ( z );                    \
+        verts[n].st[0] = 0.0f;                      \
+        verts[n].st[1] = 0.0f;                      \
+        verts[n].modulate[0] = 255;                 \
+        verts[n].modulate[1] = 255;                 \
+        verts[n].modulate[2] = 255;                 \
+        verts[n].modulate[3] = 255;                 \
+    } while ( 0 )
+
+	// bottom
+	SETVERT(0, mins[0], mins[1], mins[2]);
+	SETVERT(1, maxs[0], mins[1], mins[2]);
+	SETVERT(2, maxs[0], maxs[1], mins[2]);
+	SETVERT(3, mins[0], maxs[1], mins[2]);
+	RE_AddPolyToScene(shader, 4, verts);
+
+	// top
+	SETVERT(0, mins[0], mins[1], maxs[2]);
+	SETVERT(1, mins[0], maxs[1], maxs[2]);
+	SETVERT(2, maxs[0], maxs[1], maxs[2]);
+	SETVERT(3, maxs[0], mins[1], maxs[2]);
+	RE_AddPolyToScene(shader, 4, verts);
+
+	// -X
+	SETVERT(0, mins[0], mins[1], mins[2]);
+	SETVERT(1, mins[0], maxs[1], mins[2]);
+	SETVERT(2, mins[0], maxs[1], maxs[2]);
+	SETVERT(3, mins[0], mins[1], maxs[2]);
+	RE_AddPolyToScene(shader, 4, verts);
+
+	// +X
+	SETVERT(0, maxs[0], mins[1], mins[2]);
+	SETVERT(1, maxs[0], mins[1], maxs[2]);
+	SETVERT(2, maxs[0], maxs[1], maxs[2]);
+	SETVERT(3, maxs[0], maxs[1], mins[2]);
+	RE_AddPolyToScene(shader, 4, verts);
+
+	// -Y
+	SETVERT(0, mins[0], mins[1], mins[2]);
+	SETVERT(1, mins[0], mins[1], maxs[2]);
+	SETVERT(2, maxs[0], mins[1], maxs[2]);
+	SETVERT(3, maxs[0], mins[1], mins[2]);
+	RE_AddPolyToScene(shader, 4, verts);
+
+	// +Y
+	SETVERT(0, mins[0], maxs[1], mins[2]);
+	SETVERT(1, maxs[0], maxs[1], mins[2]);
+	SETVERT(2, maxs[0], maxs[1], maxs[2]);
+	SETVERT(3, mins[0], maxs[1], maxs[2]);
+	RE_AddPolyToScene(shader, 4, verts);
+
+#undef SETVERT
+}
+
+
+/*
+=====================
+R_AddPlayerClipBrushes
+Added by Hoyo
+
+Visualizes nearby CONTENTS_PLAYERCLIP collision brushes.
+=====================
+*/
+static void R_AddPlayerClipBrushes(const vec3_t vieworg) {
+	static qhandle_t clipShader;
+	cbrush_t* brush;
+	int i;
+
+	if (!r_drawPlayerClip->integer) {
+		return;
+	}
+
+	if (!cm.brushes || cm.numBrushes <= 0) {
+		return;
+	}
+
+	if (!clipShader) {
+		clipShader = RE_RegisterShader("truefix_playerclip");
+
+		ri.Printf(
+			PRINT_ALL,
+			"truefix_playerclip shader handle = %i\n",
+			clipShader
+		);
+	}
+
+	if (!clipShader) {
+		return;
+	}
+
+	for (i = 0; i < cm.numBrushes; i++) {
+		brush = &cm.brushes[i];
+
+		if (!(brush->contents & CONTENTS_PLAYERCLIP)) {
+			continue;
+		}
+
+		if (!R_PlayerClipInRange(brush, vieworg)) {
+			continue;
+		}
+
+		R_AddPlayerClipBox(
+			brush->bounds[0],
+			brush->bounds[1],
+			clipShader
+		);
+	}
+}
+
+
 /*
 @@@@@@@@@@@@@@@@@@@@@
 RE_RenderScene
@@ -422,6 +578,11 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	if ( !tr.world && !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
 		ri.Error( ERR_DROP, "R_RenderScene: NULL worldmodel" );
+	}
+
+	// Hoyo: speedrun/practice visualization of invisible player clip brushes.
+	if (!(fd->rdflags & RDF_NOWORLDMODEL)) {
+		R_AddPlayerClipBrushes(fd->vieworg);
 	}
 
 	memcpy( tr.refdef.text, fd->text, sizeof( tr.refdef.text ) );
