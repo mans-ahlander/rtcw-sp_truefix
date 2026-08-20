@@ -339,7 +339,14 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 
 		// entities can be flagged to explicitly not be sent to the client
 		if ( ent->r.svFlags & SVF_NOCLIENT ) {
-			continue;
+			// Hoyo: expose BSP trigger brushes for trigger visualization
+			if (!(sv_gametype->integer == GT_SINGLE_PLAYER &&
+				Cvar_VariableIntegerValue("g_drawTriggers") &&
+				(ent->r.contents & CONTENTS_TRIGGER) &&
+				ent->r.bmodel)) {
+				continue;
+			}
+			// continue;
 		}
 
 		// entities can be flagged to be sent to only one client
@@ -632,6 +639,19 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		ent = SV_GentityNum( entityNumbers.snapshotEntities[i] );
 		state = &svs.snapshotEntities[svs.nextSnapshotEntities % svs.numSnapshotEntities];
 		*state = ent->s;
+
+		// Hoyo: mark normally hidden trigger brushes in the snapshot only
+		if (Cvar_VariableIntegerValue("g_drawTriggers") &&
+			(ent->r.svFlags & SVF_NOCLIENT) &&
+			(ent->r.contents & CONTENTS_TRIGGER) &&
+			ent->r.bmodel) {
+			state->eType = ET_TRIGGER_DEBUG;
+
+			// Pass the world-space trigger bounds to cgame.
+			VectorCopy(ent->r.absmin, state->origin);
+			VectorCopy(ent->r.absmax, state->origin2);
+		}
+
 		svs.nextSnapshotEntities++;
 		// this should never hit, map should always be restarted first in SV_Frame
 		if ( svs.nextSnapshotEntities >= 0x7FFFFFFE ) {

@@ -60,6 +60,10 @@ vmCvar_t g_gametype;
 vmCvar_t g_gameskill;
 // done
 
+// <- Hoyo added. 
+vmCvar_t g_drawTriggers; // For trigger brush visualization
+// Hoyo ->
+
 vmCvar_t g_reloading;       //----(SA)	added
 
 vmCvar_t g_dmflags;
@@ -228,6 +232,10 @@ cvarTable_t gameCvarTable[] = {
 	// Rafael gameskill
 	{ &g_gameskill, "g_gameskill", "2", CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse  },   // (SA) new default '2' (was '1')
 	// done
+
+	// <- Hoyo, Trigger visualization cvars
+	{ &g_drawTriggers, "g_drawTriggers", "0", CVAR_CHEAT, 0, qfalse },
+	// Hoyo ->
 
 	// Knightmare- game balancing cvars
 	{ &sk_rot_health, "sk_rot_health", "0", 0, 0, qfalse  },
