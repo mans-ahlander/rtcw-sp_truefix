@@ -1910,11 +1910,6 @@ static void CG_TriggerDebug(centity_t* cent) {
 
 	if (!triggerShader) {
 		triggerShader = trap_R_RegisterShader("truefix_trigger");
-
-		CG_Printf(
-			"truefix_trigger shader handle = %i\n",
-			triggerShader
-		);
 	}
 
 	if (!triggerShader) {

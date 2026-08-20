@@ -36,7 +36,36 @@ If you have questions concerning this license or the applicable additional terms
 
 extern void G_CheckForCursorHints( gentity_t *ent );
 
+// <- Hoyo. Added for trigger feedback
+static qboolean triggerWasTouched[MAX_GENTITIES];
+static qboolean triggerTouchedThisFrame[MAX_GENTITIES];
 
+static void G_TriggerFeedback(gentity_t* trigger, gentity_t* activator) {
+	static int triggerFeedbackSound;
+
+	if (!g_triggerFeedback.integer) {
+		return;
+	}
+
+	if (!activator || !activator->client || activator->aiCharacter) {
+		return;
+	}
+
+	if (!triggerFeedbackSound) {
+		triggerFeedbackSound = G_SoundIndex("sound/truefix/trigger.wav");
+	}
+
+	G_AddEvent(activator, EV_GENERAL_SOUND, triggerFeedbackSound);
+
+	G_Printf(
+		"TRIGGER: ent=%i classname=%s targetname=%s target=%s\n",
+		trigger->s.number,
+		trigger->classname ? trigger->classname : "<none>",
+		trigger->targetname ? trigger->targetname : "<none>",
+		trigger->target ? trigger->target : "<none>"
+	);
+}
+// Hoyo ->
 
 /*
 ===============
@@ -312,6 +341,8 @@ void    G_TouchTriggers( gentity_t *ent ) {
 	vec3_t mins, maxs;
 	static vec3_t range = { 40, 40, 52 };
 
+	memset(triggerTouchedThisFrame, 0, sizeof(triggerTouchedThisFrame));
+
 	if ( !ent->client ) {
 		return;
 	}
@@ -360,6 +391,17 @@ void    G_TouchTriggers( gentity_t *ent ) {
 			}
 		}
 
+		if (hit->r.bmodel &&
+			hit->s.number >= 0 &&
+			hit->s.number < MAX_GENTITIES) {
+
+			triggerTouchedThisFrame[hit->s.number] = qtrue;
+
+			if (!triggerWasTouched[hit->s.number]) {
+				G_TriggerFeedback(hit, ent);
+			}
+		}
+
 		memset( &trace, 0, sizeof( trace ) );
 
 		if ( hit->touch ) {
@@ -370,6 +412,12 @@ void    G_TouchTriggers( gentity_t *ent ) {
 			ent->touch( ent, hit, &trace );
 		}
 	}
+
+	memcpy(
+		triggerWasTouched,
+		triggerTouchedThisFrame,
+		sizeof(triggerWasTouched)
+	);
 }
 
 /*

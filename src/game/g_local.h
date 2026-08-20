@@ -1089,6 +1089,7 @@ extern vmCvar_t g_gameskill;
 
 // <- Hoyo, Trigger visualization cvars
 extern vmCvar_t g_drawTriggers;
+extern vmCvar_t g_triggerFeedback;
 // Hoyo ->
 
 extern vmCvar_t g_reloading;        //----(SA)	added

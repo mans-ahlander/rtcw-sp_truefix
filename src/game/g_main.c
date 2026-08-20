@@ -61,7 +61,8 @@ vmCvar_t g_gameskill;
 // done
 
 // <- Hoyo added. 
-vmCvar_t g_drawTriggers; // For trigger brush visualization
+vmCvar_t g_drawTriggers;	// For trigger brush visualization
+vmCvar_t g_triggerFeedback; // Sound feedback when player activates a trigger
 // Hoyo ->
 
 vmCvar_t g_reloading;       //----(SA)	added
@@ -235,6 +236,7 @@ cvarTable_t gameCvarTable[] = {
 
 	// <- Hoyo, Trigger visualization cvars
 	{ &g_drawTriggers, "g_drawTriggers", "0", CVAR_CHEAT, 0, qfalse },
+	{ &g_triggerFeedback, "g_triggerFeedback", "0", CVAR_CHEAT, 0, qfalse },
 	// Hoyo ->
 
 	// Knightmare- game balancing cvars
