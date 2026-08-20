@@ -647,6 +647,9 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 			ent->r.bmodel) {
 
 			state->eType = ET_TRIGGER_DEBUG;
+
+			// Debug representation only: never participate in client collision/prediction.
+			state->solid = 0;
 		}
 
 		svs.nextSnapshotEntities++;
