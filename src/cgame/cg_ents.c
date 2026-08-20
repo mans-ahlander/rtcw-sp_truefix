@@ -1897,6 +1897,36 @@ static void CG_Explosive( centity_t *cent ) {
 
 /*
 ===============
+CG_TriggerDebug
+Added by Hoyo
+
+Draw the exact collision geometry of a normally invisible trigger brush.
+===============
+*/
+static void CG_TriggerDebug(centity_t* cent) {
+	clipHandle_t model;
+
+	if (!cgs.media.triggerDebugShader) {
+		return;
+	}
+
+	if (cent->currentState.modelindex <= 0) {
+		return;
+	}
+
+	model = trap_CM_InlineModel(cent->currentState.modelindex);
+
+	trap_R_AddCollisionModelToScene(
+		model,
+		cent->lerpOrigin,
+		cent->lerpAngles,
+		cgs.media.triggerDebugShader
+	);
+}
+
+
+/*
+===============
 CG_Mover
 ===============
 */
@@ -2363,6 +2393,10 @@ static void CG_ProcessEntity( centity_t *cent ) {
 	case ET_INVISIBLE:
 	case ET_PUSH_TRIGGER:
 	case ET_TELEPORT_TRIGGER:
+		break;
+	case ET_TRIGGER_DEBUG: // Hoyo. Trigger brush visualization
+		CG_TriggerDebug(cent);
+		break;
 	case ET_AI_EFFECT:
 	case ET_LEAKY:  //----(SA)	added
 	case ET_SPIRIT_SPAWNER:

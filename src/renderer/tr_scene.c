@@ -28,6 +28,7 @@ If you have questions concerning this license or the applicable additional terms
 
 
 #include "tr_local.h"
+#include "../qcommon/cm_local.h"
 
 int r_firstSceneDrawSurf;
 
@@ -394,6 +395,277 @@ void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float sca
 	cor->flags = flags;
 }
 
+
+/*
+=====================
+R_PlayerClipInRange
+Added by Hoyo.
+
+Checks if a player is within 2048 range of a brush
+=====================
+*/
+static qboolean R_PlayerClipInRange( const cbrush_t *brush, const vec3_t origin ) {
+    vec3_t nearest;
+    vec3_t delta;
+    int i;
+
+    for ( i = 0; i < 3; i++ ) {
+        if ( origin[i] < brush->bounds[0][i] ) {
+            nearest[i] = brush->bounds[0][i];
+        } else if ( origin[i] > brush->bounds[1][i] ) {
+            nearest[i] = brush->bounds[1][i];
+        } else {
+            nearest[i] = origin[i];
+        }
+    }
+
+    VectorSubtract( nearest, origin, delta );
+
+    return DotProduct( delta, delta ) <= ( 2048.0f * 2048.0f );
+}
+
+/*
+=====================
+R_AddCollisionWinding
+Added by Hoyo
+
+Adds one reconstructed collision-brush face to the scene.
+=====================
+*/
+static void R_AddCollisionWinding(
+	const winding_t* w,
+	qhandle_t shader,
+	const vec3_t origin,
+	const vec3_t angles
+) {
+	polyVert_t verts[MAX_POINTS_ON_WINDING];
+	vec3_t axis[3];
+	vec3_t p;
+	int i;
+
+	if (!w || w->numpoints < 3 ||
+		w->numpoints > MAX_POINTS_ON_WINDING) {
+		return;
+	}
+
+	memset(verts, 0, sizeof(verts));
+
+	AnglesToAxis(angles, axis);
+
+	for (i = 0; i < w->numpoints; i++) {
+		VectorCopy(origin, p);
+		VectorMA(p, w->p[i][0], axis[0], p);
+		VectorMA(p, w->p[i][1], axis[1], p);
+		VectorMA(p, w->p[i][2], axis[2], p);
+
+		VectorCopy(p, verts[i].xyz);
+
+		verts[i].st[0] = 0.0f;
+		verts[i].st[1] = 0.0f;
+
+		verts[i].modulate[0] = 255;
+		verts[i].modulate[1] = 255;
+		verts[i].modulate[2] = 255;
+		verts[i].modulate[3] = 255;
+	}
+
+	RE_AddPolyToScene(shader, w->numpoints, verts);
+}
+
+
+/*
+=====================
+R_AddCollisionBrush
+Added by Hoyo
+
+Reconstructs and draws the exact faces of a convex collision brush.
+=====================
+*/
+static void R_AddCollisionBrush(
+	const cbrush_t* brush,
+	qhandle_t shader,
+	const vec3_t origin,
+	const vec3_t angles
+) {
+	winding_t* w;
+	winding_t* front;
+	winding_t* back;
+	cplane_t* plane;
+	int i, j;
+
+	if (!brush || brush->numsides < 4) {
+		return;
+	}
+
+	for (i = 0; i < brush->numsides; i++) {
+		plane = brush->sides[i].plane;
+
+		if (!plane) {
+			continue;
+		}
+
+		/*
+		 * Start with a very large polygon lying on this face plane.
+		 */
+		w = BaseWindingForPlane(plane->normal, plane->dist);
+
+		if (!w) {
+			continue;
+		}
+
+		/*
+		 * Clip that polygon against every other plane in the brush.
+		 *
+		 * The interior of a BSP brush lies on the BACK side of its
+		 * outward-facing planes, so keep the back winding.
+		 */
+		for (j = 0; j < brush->numsides && w; j++) {
+			if (j == i) {
+				continue;
+			}
+
+			front = NULL;
+			back = NULL;
+
+			ClipWindingEpsilon(
+				w,
+				brush->sides[j].plane->normal,
+				brush->sides[j].plane->dist,
+				CLIP_EPSILON,
+				&front,
+				&back
+			);
+
+			FreeWinding(w);
+			w = NULL;
+
+			/*
+			 * Anything in front of another brush plane is outside
+			 * the convex brush.
+			 */
+			if (front) {
+				FreeWinding(front);
+			}
+
+			/*
+			 * Keep only the part inside the brush.
+			 */
+			w = back;
+		}
+
+		if (!w) {
+			continue;
+		}
+
+		if (w->numpoints >= 3 && WindingArea(w) > 1.0f) {
+			R_AddCollisionWinding(w, shader, origin, angles);
+		}
+
+		FreeWinding(w);
+	}
+}
+
+
+
+
+/*
+=====================
+R_AddPlayerClipBrushes
+Added by Hoyo
+
+Visualizes nearby CONTENTS_PLAYERCLIP collision brushes.
+=====================
+*/
+static void R_AddPlayerClipBrushes(const vec3_t vieworg) {
+	qhandle_t clipShader;
+	cbrush_t* brush;
+	int i;
+
+	if (!r_drawPlayerClip->integer) {
+		return;
+	}
+
+	if (!cm.brushes || cm.numBrushes <= 0) {
+		return;
+	}
+
+	clipShader = RE_RegisterShader("truefix_playerclip");
+
+	if (!clipShader) {
+		return;
+	}
+
+	for (i = 0; i < cm.numBrushes; i++) {
+		brush = &cm.brushes[i];
+
+		if (!(brush->contents & CONTENTS_PLAYERCLIP)) {
+			continue;
+		}
+
+		if (!R_PlayerClipInRange(brush, vieworg)) {
+			continue;
+		}
+
+		R_AddCollisionBrush(
+			brush,
+			clipShader,
+			vec3_origin,
+			vec3_origin
+		);
+	}
+}
+
+
+/*
+=====================
+RE_AddCollisionModelToScene
+Added by Hoyo
+
+Draws the exact collision brushes belonging to an inline BSP model.
+Used by debug/practice visualization.
+=====================
+*/
+void RE_AddCollisionModelToScene(
+	clipHandle_t handle,
+	const vec3_t origin,
+	const vec3_t angles,
+	qhandle_t shader
+) {
+	cmodel_t* model;
+	cbrush_t* brush;
+	int brushnum;
+	int i;
+
+	if (!tr.registered || !shader) {
+		return;
+	}
+
+	if (handle <= 0 || handle >= cm.numSubModels) {
+		return;
+	}
+
+	model = CM_ClipHandleToModel(handle);
+
+	if (!model) {
+		return;
+	}
+
+	for (i = 0; i < model->leaf.numLeafBrushes; i++) {
+		brushnum =
+			cm.leafbrushes[
+				model->leaf.firstLeafBrush + i
+			];
+
+		if (brushnum < 0 || brushnum >= cm.numBrushes) {
+			continue;
+		}
+
+		brush = &cm.brushes[brushnum];
+
+		R_AddCollisionBrush(brush, shader, origin, angles);
+	}
+}
+
 /*
 @@@@@@@@@@@@@@@@@@@@@
 RE_RenderScene
@@ -422,6 +694,11 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	if ( !tr.world && !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
 		ri.Error( ERR_DROP, "R_RenderScene: NULL worldmodel" );
+	}
+
+	// Hoyo: speedrun/practice visualization of invisible player clip brushes.
+	if (!(fd->rdflags & RDF_NOWORLDMODEL)) {
+		R_AddPlayerClipBrushes(fd->vieworg);
 	}
 
 	memcpy( tr.refdef.text, fd->text, sizeof( tr.refdef.text ) );

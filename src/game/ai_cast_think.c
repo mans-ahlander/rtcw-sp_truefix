@@ -1652,25 +1652,27 @@ void AICast_QueryThink(cast_state_t* cs) {
 	// This used to cause some random crashes, like when missing the jump at dam.
 	// <-- Hoyo added
 	if (cs->enemyNum < 0 || cs->enemyNum >= MAX_CLIENTS) {
-		Com_Printf(
-			"AICast_QueryThink: INVALID enemyNum=%d cs=%p entityNum=%d state=%d\n",
-			cs->enemyNum,
-			cs,
-			cs->entityNum,
-			cs->aiState
-		);
+		
+		// Commented out debug for now. It seems to be working well.
+		//Com_Printf(
+		//	"AICast_QueryThink: INVALID enemyNum=%d cs=%p entityNum=%d state=%d\n",
+		//	cs->enemyNum,
+		//	cs,
+		//	cs->entityNum,
+		//	cs->aiState
+		//);
 
 		AICast_StateChange(cs, AISTATE_RELAXED);
 		return;
 	}
 
 	if (cs->entityNum < 0 || cs->entityNum >= MAX_GENTITIES) {
-		Com_Printf(
-			"AICast_QueryThink: INVALID entityNum=%d cs=%p enemyNum=%d\n",
-			cs->entityNum,
-			cs,
-			cs->enemyNum
-		);
+		//Com_Printf(
+		//	"AICast_QueryThink: INVALID entityNum=%d cs=%p enemyNum=%d\n",
+		//	cs->entityNum,
+		//	cs,
+		//	cs->enemyNum
+		//);
 		return;
 	}
 	// --> Hoyo added
