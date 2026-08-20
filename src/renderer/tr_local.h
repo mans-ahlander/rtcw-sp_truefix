@@ -1322,6 +1322,8 @@ qboolean    RE_GetSkinModel( qhandle_t skinid, const char *type, char *name );
 qhandle_t   RE_GetShaderFromModel( qhandle_t modelid, int surfnum, int withlightmap );    //----(SA)
 //----(SA) end
 
+void RE_AddCollisionModelToScene(clipHandle_t handle, const vec3_t origin, const vec3_t angles,	qhandle_t shader); // Hoyo
+
 model_t     *R_AllocModel( void );
 
 void        R_Init( void );

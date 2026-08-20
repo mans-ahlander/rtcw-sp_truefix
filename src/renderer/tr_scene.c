@@ -424,100 +424,41 @@ static qboolean R_PlayerClipInRange( const cbrush_t *brush, const vec3_t origin 
     return DotProduct( delta, delta ) <= ( 2048.0f * 2048.0f );
 }
 
-
 /*
 =====================
-R_AddPlayerClipBox
-Added by Hoyo.
-
-Draws an axis-aligned collision brush bounding box.
-=====================
-*/
-static void R_AddPlayerClipBox(const vec3_t mins, const vec3_t maxs, qhandle_t shader) {
-	polyVert_t verts[4];
-
-#define SETVERT( n, x, y, z )                       \
-    do {                                             \
-        verts[n].xyz[0] = ( x );                    \
-        verts[n].xyz[1] = ( y );                    \
-        verts[n].xyz[2] = ( z );                    \
-        verts[n].st[0] = 0.0f;                      \
-        verts[n].st[1] = 0.0f;                      \
-        verts[n].modulate[0] = 255;                 \
-        verts[n].modulate[1] = 255;                 \
-        verts[n].modulate[2] = 255;                 \
-        verts[n].modulate[3] = 255;                 \
-    } while ( 0 )
-
-	// bottom
-	SETVERT(0, mins[0], mins[1], mins[2]);
-	SETVERT(1, maxs[0], mins[1], mins[2]);
-	SETVERT(2, maxs[0], maxs[1], mins[2]);
-	SETVERT(3, mins[0], maxs[1], mins[2]);
-	RE_AddPolyToScene(shader, 4, verts);
-
-	// top
-	SETVERT(0, mins[0], mins[1], maxs[2]);
-	SETVERT(1, mins[0], maxs[1], maxs[2]);
-	SETVERT(2, maxs[0], maxs[1], maxs[2]);
-	SETVERT(3, maxs[0], mins[1], maxs[2]);
-	RE_AddPolyToScene(shader, 4, verts);
-
-	// -X
-	SETVERT(0, mins[0], mins[1], mins[2]);
-	SETVERT(1, mins[0], maxs[1], mins[2]);
-	SETVERT(2, mins[0], maxs[1], maxs[2]);
-	SETVERT(3, mins[0], mins[1], maxs[2]);
-	RE_AddPolyToScene(shader, 4, verts);
-
-	// +X
-	SETVERT(0, maxs[0], mins[1], mins[2]);
-	SETVERT(1, maxs[0], mins[1], maxs[2]);
-	SETVERT(2, maxs[0], maxs[1], maxs[2]);
-	SETVERT(3, maxs[0], maxs[1], mins[2]);
-	RE_AddPolyToScene(shader, 4, verts);
-
-	// -Y
-	SETVERT(0, mins[0], mins[1], mins[2]);
-	SETVERT(1, mins[0], mins[1], maxs[2]);
-	SETVERT(2, maxs[0], mins[1], maxs[2]);
-	SETVERT(3, maxs[0], mins[1], mins[2]);
-	RE_AddPolyToScene(shader, 4, verts);
-
-	// +Y
-	SETVERT(0, mins[0], maxs[1], mins[2]);
-	SETVERT(1, maxs[0], maxs[1], mins[2]);
-	SETVERT(2, maxs[0], maxs[1], maxs[2]);
-	SETVERT(3, mins[0], maxs[1], maxs[2]);
-	RE_AddPolyToScene(shader, 4, verts);
-
-#undef SETVERT
-}
-
-/*
-=====================
-R_AddPlayerClipWinding
+R_AddCollisionWinding
 Added by Hoyo
 
 Adds one reconstructed collision-brush face to the scene.
 =====================
 */
-static void R_AddPlayerClipWinding(const winding_t* w, qhandle_t shader) {
+static void R_AddCollisionWinding(
+	const winding_t* w,
+	qhandle_t shader,
+	const vec3_t origin,
+	const vec3_t angles
+) {
 	polyVert_t verts[MAX_POINTS_ON_WINDING];
+	vec3_t axis[3];
+	vec3_t p;
 	int i;
 
-	if (!w || w->numpoints < 3) {
-		return;
-	}
-
-	if (w->numpoints > MAX_POINTS_ON_WINDING) {
+	if (!w || w->numpoints < 3 ||
+		w->numpoints > MAX_POINTS_ON_WINDING) {
 		return;
 	}
 
 	memset(verts, 0, sizeof(verts));
 
+	AnglesToAxis(angles, axis);
+
 	for (i = 0; i < w->numpoints; i++) {
-		VectorCopy(w->p[i], verts[i].xyz);
+		VectorCopy(origin, p);
+		VectorMA(p, w->p[i][0], axis[0], p);
+		VectorMA(p, w->p[i][1], axis[1], p);
+		VectorMA(p, w->p[i][2], axis[2], p);
+
+		VectorCopy(p, verts[i].xyz);
 
 		verts[i].st[0] = 0.0f;
 		verts[i].st[1] = 0.0f;
@@ -534,13 +475,18 @@ static void R_AddPlayerClipWinding(const winding_t* w, qhandle_t shader) {
 
 /*
 =====================
-R_AddPlayerClipBrush
+R_AddCollisionBrush
 Added by Hoyo
 
 Reconstructs and draws the exact faces of a convex collision brush.
 =====================
 */
-static void R_AddPlayerClipBrush(const cbrush_t* brush, qhandle_t shader) {
+static void R_AddCollisionBrush(
+	const cbrush_t* brush,
+	qhandle_t shader,
+	const vec3_t origin,
+	const vec3_t angles
+) {
 	winding_t* w;
 	winding_t* front;
 	winding_t* back;
@@ -611,8 +557,8 @@ static void R_AddPlayerClipBrush(const cbrush_t* brush, qhandle_t shader) {
 			continue;
 		}
 
-		if (w->numpoints >= 3) {
-			R_AddPlayerClipWinding(w, shader);
+		if (w->numpoints >= 3 && WindingArea(w) > 1.0f) {
+			R_AddCollisionWinding(w, shader, origin, angles);
 		}
 
 		FreeWinding(w);
@@ -631,7 +577,7 @@ Visualizes nearby CONTENTS_PLAYERCLIP collision brushes.
 =====================
 */
 static void R_AddPlayerClipBrushes(const vec3_t vieworg) {
-	static qhandle_t clipShader;
+	qhandle_t clipShader;
 	cbrush_t* brush;
 	int i;
 
@@ -643,15 +589,7 @@ static void R_AddPlayerClipBrushes(const vec3_t vieworg) {
 		return;
 	}
 
-	if (!clipShader) {
-		clipShader = RE_RegisterShader("truefix_playerclip");
-
-		ri.Printf(
-			PRINT_ALL,
-			"truefix_playerclip shader handle = %i\n",
-			clipShader
-		);
-	}
+	clipShader = RE_RegisterShader("truefix_playerclip");
 
 	if (!clipShader) {
 		return;
@@ -668,10 +606,70 @@ static void R_AddPlayerClipBrushes(const vec3_t vieworg) {
 			continue;
 		}
 
-		R_AddPlayerClipBrush(brush, clipShader);
+		R_AddCollisionBrush(
+			brush,
+			clipShader,
+			vec3_origin,
+			vec3_origin
+		);
 	}
 }
 
+
+/*
+=====================
+RE_AddCollisionModelToScene
+Added by Hoyo
+
+Draws the exact collision brushes belonging to an inline BSP model.
+Used by debug/practice visualization.
+=====================
+*/
+void RE_AddCollisionModelToScene(
+	clipHandle_t handle,
+	const vec3_t origin,
+	const vec3_t angles,
+	qhandle_t shader
+) {
+	cmodel_t* model;
+	cbrush_t* brush;
+	int brushnum;
+	int i;
+
+	if (!tr.registered || !shader) {
+		return;
+	}
+
+	if (handle <= 0 || handle >= cm.numSubModels) {
+		return;
+	}
+
+	model = CM_ClipHandleToModel(handle);
+
+	if (!model) {
+		return;
+	}
+
+	for (i = 0; i < model->leaf.numLeafBrushes; i++) {
+		brushnum =
+			cm.leafbrushes[
+				model->leaf.firstLeafBrush + i
+			];
+
+		if (brushnum < 0 || brushnum >= cm.numBrushes) {
+			continue;
+		}
+
+		brush = &cm.brushes[brushnum];
+
+		R_AddCollisionBrush(
+			brush,
+			shader,
+			origin,
+			angles
+		);
+	}
+}
 
 /*
 @@@@@@@@@@@@@@@@@@@@@

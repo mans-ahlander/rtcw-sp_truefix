@@ -645,11 +645,8 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 			(ent->r.svFlags & SVF_NOCLIENT) &&
 			(ent->r.contents & CONTENTS_TRIGGER) &&
 			ent->r.bmodel) {
-			state->eType = ET_TRIGGER_DEBUG;
 
-			// Pass the world-space trigger bounds to cgame.
-			VectorCopy(ent->r.absmin, state->origin);
-			VectorCopy(ent->r.absmax, state->origin2);
+			state->eType = ET_TRIGGER_DEBUG;
 		}
 
 		svs.nextSnapshotEntities++;

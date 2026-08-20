@@ -31,7 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../cgame/tr_types.h"
 
-#define REF_API_VERSION     8
+#define REF_API_VERSION     9
 
 //
 // these are the functions exported by the refresh module
@@ -75,8 +75,12 @@ typedef struct {
 	int ( *LightForPoint )( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 	void ( *AddPolyToScene )( qhandle_t hShader, int numVerts, const polyVert_t *verts );
 	// Ridah
-	void ( *AddPolysToScene )( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys );
+	void ( *AddPolysToScene )( qhandle_t hShader, int numVerts, const polyVert_t* verts, int numPolys );
 	// done.
+	// <- Added by Hoyo
+	void (*AddCollisionModelToScene)(clipHandle_t model, const vec3_t origin, const vec3_t angles, qhandle_t shader);
+	// Hoyo ->
+
 	void ( *AddLightToScene )( const vec3_t org, float intensity, float r, float g, float b, int overdraw );
 //----(SA)
 	void ( *AddCoronaToScene )( const vec3_t org, float r, float g, float b, float scale, int id, int flags );

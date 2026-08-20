@@ -56,14 +56,6 @@ static void G_TriggerFeedback(gentity_t* trigger, gentity_t* activator) {
 	}
 
 	G_AddEvent(activator, EV_GENERAL_SOUND, triggerFeedbackSound);
-
-	G_Printf(
-		"TRIGGER: ent=%i classname=%s targetname=%s target=%s\n",
-		trigger->s.number,
-		trigger->classname ? trigger->classname : "<none>",
-		trigger->targetname ? trigger->targetname : "<none>",
-		trigger->target ? trigger->target : "<none>"
-	);
 }
 // Hoyo ->
 

@@ -1479,6 +1479,9 @@ refexport_t *GetRefAPI( int apiVersion, refimport_t *rimp ) {
 	// Ridah
 	re.AddPolysToScene  = RE_AddPolysToScene;
 	// done.
+	// <- Added by Hoyo
+	re.AddCollisionModelToScene = RE_AddCollisionModelToScene;
+	// Hoyo ->
 	re.AddLightToScene  = RE_AddLightToScene;
 //----(SA)
 	re.AddCoronaToScene = RE_AddCoronaToScene;

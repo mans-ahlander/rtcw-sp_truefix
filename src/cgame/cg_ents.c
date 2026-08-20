@@ -1897,86 +1897,35 @@ static void CG_Explosive( centity_t *cent ) {
 
 /*
 ===============
-Hoyo added
 CG_TriggerDebug
+Added by Hoyo
 
-Draw an axis-aligned bounding box around a normally invisible trigger brush.
+Draw the exact collision geometry of a normally invisible trigger brush.
 ===============
 */
 static void CG_TriggerDebug(centity_t* cent) {
-	polyVert_t verts[4];
-	vec3_t mins, maxs;
-	static qhandle_t triggerShader;
+	qhandle_t triggerShader;
+	clipHandle_t model;
 
-	if (!triggerShader) {
-		triggerShader = trap_R_RegisterShader("truefix_trigger");
-	}
+	triggerShader = trap_R_RegisterShader("truefix_trigger");
 
 	if (!triggerShader) {
 		return;
 	}
 
-	VectorCopy(cent->currentState.origin, mins);
-	VectorCopy(cent->currentState.origin2, maxs);
+	if (cent->currentState.modelindex <= 0) {
+		return;
+	}
 
-#define SETVERT( n, x, y, z )                       \
-    do {                                             \
-        verts[n].xyz[0] = ( x );                    \
-        verts[n].xyz[1] = ( y );                    \
-        verts[n].xyz[2] = ( z );                    \
-        verts[n].st[0] = 0.0f;                      \
-        verts[n].st[1] = 0.0f;                      \
-        verts[n].modulate[0] = 255;                 \
-        verts[n].modulate[1] = 255;                 \
-        verts[n].modulate[2] = 255;                 \
-        verts[n].modulate[3] = 255;                 \
-    } while ( 0 )
+	model = trap_CM_InlineModel(cent->currentState.modelindex);
 
-	// Bottom
-	SETVERT(0, mins[0], mins[1], mins[2]);
-	SETVERT(1, maxs[0], mins[1], mins[2]);
-	SETVERT(2, maxs[0], maxs[1], mins[2]);
-	SETVERT(3, mins[0], maxs[1], mins[2]);
-	trap_R_AddPolyToScene(triggerShader, 4, verts);
-
-	// Top
-	SETVERT(0, mins[0], mins[1], maxs[2]);
-	SETVERT(1, mins[0], maxs[1], maxs[2]);
-	SETVERT(2, maxs[0], maxs[1], maxs[2]);
-	SETVERT(3, maxs[0], mins[1], maxs[2]);
-	trap_R_AddPolyToScene(triggerShader, 4, verts);
-
-	// -X
-	SETVERT(0, mins[0], mins[1], mins[2]);
-	SETVERT(1, mins[0], maxs[1], mins[2]);
-	SETVERT(2, mins[0], maxs[1], maxs[2]);
-	SETVERT(3, mins[0], mins[1], maxs[2]);
-	trap_R_AddPolyToScene(triggerShader, 4, verts);
-
-	// +X
-	SETVERT(0, maxs[0], mins[1], mins[2]);
-	SETVERT(1, maxs[0], mins[1], maxs[2]);
-	SETVERT(2, maxs[0], maxs[1], maxs[2]);
-	SETVERT(3, maxs[0], maxs[1], mins[2]);
-	trap_R_AddPolyToScene(triggerShader, 4, verts);
-
-	// -Y
-	SETVERT(0, mins[0], mins[1], mins[2]);
-	SETVERT(1, mins[0], mins[1], maxs[2]);
-	SETVERT(2, maxs[0], mins[1], maxs[2]);
-	SETVERT(3, maxs[0], mins[1], mins[2]);
-	trap_R_AddPolyToScene(triggerShader, 4, verts);
-
-	// +Y
-	SETVERT(0, mins[0], maxs[1], mins[2]);
-	SETVERT(1, maxs[0], maxs[1], mins[2]);
-	SETVERT(2, maxs[0], maxs[1], maxs[2]);
-	SETVERT(3, mins[0], maxs[1], maxs[2]);
-	trap_R_AddPolyToScene(triggerShader, 4, verts);
-
-#undef SETVERT
+	trap_R_AddCollisionModelToScene(
+		model,
+		cent->lerpOrigin,
+		cent->lerpAngles,
+		triggerShader
+	);
 }
-
 
 
 /*
@@ -2447,6 +2396,7 @@ static void CG_ProcessEntity( centity_t *cent ) {
 	case ET_INVISIBLE:
 	case ET_PUSH_TRIGGER:
 	case ET_TELEPORT_TRIGGER:
+		break;
 	case ET_TRIGGER_DEBUG: // Hoyo. Trigger brush visualization
 		CG_TriggerDebug(cent);
 		break;
