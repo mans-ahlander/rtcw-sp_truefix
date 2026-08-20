@@ -494,6 +494,134 @@ static void R_AddPlayerClipBox(const vec3_t mins, const vec3_t maxs, qhandle_t s
 #undef SETVERT
 }
 
+/*
+=====================
+R_AddPlayerClipWinding
+Added by Hoyo
+
+Adds one reconstructed collision-brush face to the scene.
+=====================
+*/
+static void R_AddPlayerClipWinding(const winding_t* w, qhandle_t shader) {
+	polyVert_t verts[MAX_POINTS_ON_WINDING];
+	int i;
+
+	if (!w || w->numpoints < 3) {
+		return;
+	}
+
+	if (w->numpoints > MAX_POINTS_ON_WINDING) {
+		return;
+	}
+
+	memset(verts, 0, sizeof(verts));
+
+	for (i = 0; i < w->numpoints; i++) {
+		VectorCopy(w->p[i], verts[i].xyz);
+
+		verts[i].st[0] = 0.0f;
+		verts[i].st[1] = 0.0f;
+
+		verts[i].modulate[0] = 255;
+		verts[i].modulate[1] = 255;
+		verts[i].modulate[2] = 255;
+		verts[i].modulate[3] = 255;
+	}
+
+	RE_AddPolyToScene(shader, w->numpoints, verts);
+}
+
+
+
+/*
+=====================
+R_AddPlayerClipBrush
+Added by Hoyo
+
+Reconstructs and draws the exact faces of a convex collision brush.
+=====================
+*/
+static void R_AddPlayerClipBrush(const cbrush_t* brush, qhandle_t shader) {
+	winding_t* w;
+	winding_t* front;
+	winding_t* back;
+	cplane_t* plane;
+	int i, j;
+
+	if (!brush || brush->numsides < 4) {
+		return;
+	}
+
+	for (i = 0; i < brush->numsides; i++) {
+		plane = brush->sides[i].plane;
+
+		if (!plane) {
+			continue;
+		}
+
+		/*
+		 * Start with a very large polygon lying on this face plane.
+		 */
+		w = BaseWindingForPlane(plane->normal, plane->dist);
+
+		if (!w) {
+			continue;
+		}
+
+		/*
+		 * Clip that polygon against every other plane in the brush.
+		 *
+		 * The interior of a BSP brush lies on the BACK side of its
+		 * outward-facing planes, so keep the back winding.
+		 */
+		for (j = 0; j < brush->numsides && w; j++) {
+			if (j == i) {
+				continue;
+			}
+
+			front = NULL;
+			back = NULL;
+
+			ClipWindingEpsilon(
+				w,
+				brush->sides[j].plane->normal,
+				brush->sides[j].plane->dist,
+				CLIP_EPSILON,
+				&front,
+				&back
+			);
+
+			FreeWinding(w);
+			w = NULL;
+
+			/*
+			 * Anything in front of another brush plane is outside
+			 * the convex brush.
+			 */
+			if (front) {
+				FreeWinding(front);
+			}
+
+			/*
+			 * Keep only the part inside the brush.
+			 */
+			w = back;
+		}
+
+		if (!w) {
+			continue;
+		}
+
+		if (w->numpoints >= 3) {
+			R_AddPlayerClipWinding(w, shader);
+		}
+
+		FreeWinding(w);
+	}
+}
+
+
+
 
 /*
 =====================
@@ -541,11 +669,7 @@ static void R_AddPlayerClipBrushes(const vec3_t vieworg) {
 			continue;
 		}
 
-		R_AddPlayerClipBox(
-			brush->bounds[0],
-			brush->bounds[1],
-			clipShader
-		);
+		R_AddPlayerClipBrush(brush, clipShader);
 	}
 }
 
