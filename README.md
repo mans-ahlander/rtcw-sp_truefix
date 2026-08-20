@@ -39,7 +39,7 @@ to preserve the behavior of the original game as closely as possible.
     - Source: https://www.markshan.com/knightmare/downloads.htm
 - KoRrNiK — RTCW speedrun patch and selected fixes incorporated
     - Source: https://github.com/KoRrNiK/RtCW-Patch_Speedrun
-- iortcw — Serveral stability/compatibility fixes was taken from the unofficial RTCW patch "iortcw"
+- iortcw — Serveral stability/compatibility fixes were taken from the unofficial RTCW patch "iortcw"
     - Source: https://github.com/iortcw/iortcw
 
 ## License
