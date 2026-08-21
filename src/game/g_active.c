@@ -39,10 +39,16 @@ extern void G_CheckForCursorHints( gentity_t *ent );
 // <- Hoyo. Added for trigger feedback
 static qboolean triggerWasTouched[MAX_GENTITIES];
 static qboolean triggerTouchedThisFrame[MAX_GENTITIES];
+static int triggerFeedbackSound;
 
-static void G_TriggerFeedback(gentity_t* trigger, gentity_t* activator) {
-	static int triggerFeedbackSound;
+void G_InitTriggerFeedback(void) {
+	memset(triggerWasTouched, 0, sizeof(triggerWasTouched));
+	memset(triggerTouchedThisFrame, 0, sizeof(triggerTouchedThisFrame));
 
+	triggerFeedbackSound = 0;
+}
+
+static void G_TriggerFeedback(gentity_t* activator) {
 	if (!g_triggerFeedback.integer) {
 		return;
 	}
@@ -52,10 +58,15 @@ static void G_TriggerFeedback(gentity_t* trigger, gentity_t* activator) {
 	}
 
 	if (!triggerFeedbackSound) {
-		triggerFeedbackSound = G_SoundIndex("sound/truefix/trigger.wav");
+		return;
 	}
 
 	G_AddEvent(activator, EV_GENERAL_SOUND, triggerFeedbackSound);
+}
+
+void G_RegisterTriggerFeedbackSound(void) {
+	triggerFeedbackSound =
+		G_SoundIndex("sound/truefix/trigger.wav");
 }
 // Hoyo ->
 
@@ -333,20 +344,42 @@ void    G_TouchTriggers( gentity_t *ent ) {
 	vec3_t mins, maxs;
 	static vec3_t range = { 40, 40, 52 };
 	qboolean trackTriggerFeedback;
+	qboolean triggerFeedbackActive;
 
-	if ( !ent->client ) {
+	if (!ent->client) {
 		return;
 	}
 
-	trackTriggerFeedback = (ent->s.number == 0 && !ent->aiCharacter);
+	trackTriggerFeedback =
+		(ent->s.number == 0 && !ent->aiCharacter);
 
-	if (trackTriggerFeedback) {
-		memset(triggerTouchedThisFrame, 0, sizeof(triggerTouchedThisFrame));
+	triggerFeedbackActive =
+		(trackTriggerFeedback && g_triggerFeedback.integer);
+
+	
+	// Feedback-disabled state should not influence the next enabled trigger entry. 
+	// Clear the history while feedback is disabled.
+	if (trackTriggerFeedback && !triggerFeedbackActive) {
+		memset(triggerWasTouched, 0, sizeof(triggerWasTouched));
+		memset(triggerTouchedThisFrame,0, sizeof(triggerTouchedThisFrame));
 	}
 
 	// dead clients don't activate triggers!
-	if ( ent->client->ps.stats[STAT_HEALTH] <= 0 ) {
+	if (ent->client->ps.stats[STAT_HEALTH] <= 0) {
+		if (trackTriggerFeedback) {
+			memset(triggerWasTouched, 0, sizeof(triggerWasTouched));
+			memset(triggerTouchedThisFrame, 0, sizeof(triggerTouchedThisFrame));
+		}
+
 		return;
+	}
+
+	if (triggerFeedbackActive) {
+		memset(
+			triggerTouchedThisFrame,
+			0,
+			sizeof(triggerTouchedThisFrame)
+		);
 	}
 
 	VectorSubtract( ent->client->ps.origin, range, mins );
@@ -388,7 +421,7 @@ void    G_TouchTriggers( gentity_t *ent ) {
 			}
 		}
 
-		if (trackTriggerFeedback &&
+		if (triggerFeedbackActive &&
 			hit->r.bmodel &&
 			hit->s.number >= 0 &&
 			hit->s.number < MAX_GENTITIES) {
@@ -396,7 +429,7 @@ void    G_TouchTriggers( gentity_t *ent ) {
 			triggerTouchedThisFrame[hit->s.number] = qtrue;
 
 			if (!triggerWasTouched[hit->s.number]) {
-				G_TriggerFeedback(hit, ent);
+				G_TriggerFeedback(ent);
 			}
 		}
 
@@ -411,7 +444,7 @@ void    G_TouchTriggers( gentity_t *ent ) {
 		}
 	}
 
-	if (trackTriggerFeedback) {
+	if (triggerFeedbackActive) {
 		memcpy(
 			triggerWasTouched,
 			triggerTouchedThisFrame,

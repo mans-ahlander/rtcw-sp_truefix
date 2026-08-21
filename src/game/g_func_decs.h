@@ -1144,6 +1144,8 @@ extern void ClientImpacts ( gentity_t * ent , pmove_t * pm ) ;
 extern void G_SetClientSound ( gentity_t * ent ) ;
 extern void P_WorldEffects ( gentity_t * ent ) ;
 extern void P_DamageFeedback ( gentity_t * player ) ;
+extern void G_RegisterTriggerFeedbackSound ( void ) ;
+extern void G_InitTriggerFeedback ( void ) ;
 extern void PM_StepSlideMove ( qboolean gravity ) ;
 extern qboolean PM_SlideMove ( qboolean gravity ) ;
 extern void PM_AdjustAimSpreadScale ( void ) ;
