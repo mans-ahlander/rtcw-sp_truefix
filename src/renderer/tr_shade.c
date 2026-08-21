@@ -170,11 +170,27 @@ static void R_DrawElements( int numIndexes, const glIndex_t *indexes ) {
 
 	// default is to use triangles if compiled vertex arrays are present
 	if ( primitives == 0 ) {
-		if ( qglLockArraysEXT ) {
-			primitives = 2;
-		} else {
-			primitives = 1;
-		}
+		//if ( qglLockArraysEXT ) {
+		//	primitives = 2;
+		//} else {
+		//	primitives = 1;
+		//}
+
+		// Change by Hoyo
+		// glDrawElements does not require GL_EXT_compiled_vertex_array.
+		// The old glArrayElement strip path can be extremely slow on modern OpenGL drivers.
+		primitives = 2;
+	}
+
+	primitives = r_primitives->integer;
+
+	/*
+	 * Default to indexed triangle rendering.
+	 *
+	 
+	 */
+	if (primitives == 0) {
+		primitives = 2;
 	}
 
 

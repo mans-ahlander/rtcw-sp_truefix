@@ -954,21 +954,34 @@ void GfxInfo_f( void ) {
 		ri.Printf( PRINT_ALL, "rendering primitives: " );
 		primitives = r_primitives->integer;
 		if ( primitives == 0 ) {
-			if ( qglLockArraysEXT ) {
-				primitives = 2;
-			} else {
-				primitives = 1;
-			}
+			//if ( qglLockArraysEXT ) {
+			//	primitives = 2;
+			//} else {
+			//	primitives = 1;
+			//}
+			primitives = 2; // Change by Hoyo
 		}
 		if ( primitives == -1 ) {
 			ri.Printf( PRINT_ALL, "none\n" );
 		} else if ( primitives == 2 ) {
 			ri.Printf( PRINT_ALL, "single glDrawElements\n" );
 		} else if ( primitives == 1 ) {
-			ri.Printf( PRINT_ALL, "multiple glArrayElement\n" );
+			ri.Printf( PRINT_ALL, "multiple glArrayElement (legacy)\n" );
 		} else if ( primitives == 3 ) {
-			ri.Printf( PRINT_ALL, "multiple glColor4ubv + glTexCoord2fv + glVertex3fv\n" );
+			ri.Printf( PRINT_ALL, "multiple glColor4ubv + glTexCoord2fv + glVertex3fv (legacy)\n" );
 		}
+	}
+
+	// Hoyo. Add warning about the poor performance of r_primitives->integer == 1 or 3
+	if (r_primitives->integer == 1 ||
+		r_primitives->integer == 3) {
+		ri.Printf(
+			PRINT_WARNING,
+			"WARNING: r_primitives %i selects a legacy rendering path "
+			"that may severely reduce performance. "
+			"Use r_primitives 0 or 2 unless specifically required.\n",
+			r_primitives->integer
+		);
 	}
 
 	ri.Printf( PRINT_ALL, "texturemode: %s\n", r_textureMode->string );
