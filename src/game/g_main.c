@@ -1467,6 +1467,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	// parse the key/value pairs and spawn gentities
 	G_SpawnEntitiesFromString();
 
+	// Hoyo: append TrueFix trigger feedback sound after map sounds
+	// have received their normal configstring indices.
+	G_RegisterTriggerFeedbackSound();
+
 	// create the camera entity that will communicate with the scripts
 	G_SpawnScriptCamera();
 
