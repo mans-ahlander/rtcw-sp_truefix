@@ -7,7 +7,7 @@
   - Displays the exact geometry of normally invisible trigger brushes.
 - Added optional **trigger activation feedback** with `g_triggerFeedback 1`.
   - Plays a sound when the activates a trigger.
-- Added **player clip visualization** with `r_drawPlayerClip 1`.
+- Added **player clip visualization** with `r_drawPlayerClips 1`.
   - Displays the exact geometry of invisible player clip brushes used by the map collision system.
 
 ## 1.43a
