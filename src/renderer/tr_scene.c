@@ -581,7 +581,7 @@ static void R_AddPlayerClipBrushes(const vec3_t vieworg) {
 	cbrush_t* brush;
 	int i;
 
-	if (!r_drawPlayerClip->integer) {
+	if (!r_drawPlayerClips->integer) {
 		return;
 	}
 
