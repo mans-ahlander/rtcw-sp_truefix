@@ -203,7 +203,6 @@ static ignoreField_t gentityIgnoreFields[] = {
 };
 
 static ignoreField_t gclientIgnoreFields[] = {
-	{CFOFS(modelInfo), sizeof(animModelInfo_t*)}, // Added by Hoyo. Runtime animation data. This pointer is rebuilt when the model animation data is initialized and must not be restored from a save.
 	// don't process events that have already occured before the game was saved
 	//{CFOFS(ps.events[0]),		sizeof(int) * MAX_EVENTS},
 	//{CFOFS(ps.eventParms[0]),	sizeof(int) * MAX_EVENTS},
