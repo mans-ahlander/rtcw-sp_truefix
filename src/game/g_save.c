@@ -209,6 +209,9 @@ static ignoreField_t gclientIgnoreFields[] = {
 	//{CFOFS(ps.eventSequence),	sizeof(int)},
 	//{CFOFS(ps.oldEventSequence),sizeof(int)},
 
+	// Added by Hoyo. Runtime animation data, recreated when model data is initialized. Never restore the raw pointer stored in the savegame.
+	{CFOFS(modelInfo), sizeof(animModelInfo_t *)},
+
 	{0, 0}
 };
 
