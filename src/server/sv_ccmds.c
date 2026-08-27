@@ -398,6 +398,9 @@ static void SV_MapRestart_f( void ) {
 
 	SV_RestartGameProgs();
 
+	// Hoyo. The native game DLL may have been unloaded and reloaded in a different area. Do not allow cgame to process the previous server frame afterward.
+	SV_MarkGameRestarted();
+
 	// run a few frames to allow everything to settle
 	for ( i = 0 ; i < 3 ; i++ ) {
 		VM_Call( gvm, GAME_RUN_FRAME, svs.time );

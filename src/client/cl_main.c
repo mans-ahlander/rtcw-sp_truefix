@@ -114,6 +114,7 @@ void hA3Dg_ExportRenderGeom( refexport_t *incoming_re );
 #endif
 
 extern void SV_BotFrame( int time );
+extern qboolean SV_GameRestartedThisFrame(void);
 void CL_CheckForResend( void );
 void CL_ShowIP_f( void );
 void CL_ServerStatus_f( void );
@@ -2037,6 +2038,14 @@ void CL_Frame( int msec ) {
 
 	// resend a connection request if necessary
 	CL_CheckForResend();
+
+	// Hoyo
+	// A local game VM restart may have unloaded qagame after the current server frame was generated.
+	// Do not run cgame against that stale server frame.
+	// The next server frame will carry the map_restart notification and refreshed snapshot.
+	if (SV_GameRestartedThisFrame()) {
+		return;
+	}
 
 	// decide on the serverTime to render
 	CL_SetCGameTime();

@@ -1162,6 +1162,22 @@ qboolean G_CheckForExistingModelInfo( gclient_t *cl, char *modelName, animModelI
 	int i;
 	animModelInfo_t *trav;
 
+	// Hoyo. Sanity checks for debugging/avoiding animation-related crashes
+	if (!cl) {
+		G_Error("G_CheckForExistingModelInfo: NULL client\n");
+		return qfalse;
+	}
+
+	if (cl->ps.clientNum < 0 || cl->ps.clientNum >= MAX_CLIENTS) {
+		G_Error("G_CheckForExistingModelInfo: invalid clientNum %i\n", cl->ps.clientNum);
+		return qfalse;
+	}
+
+	if (!modelInfo) {
+		G_Error("G_CheckForExistingModelInfo: NULL modelInfo pointer\n");
+		return qfalse;
+	}
+
 	for ( i = 0; i < MAX_ANIMSCRIPT_MODELS; i++ ) {
 		trav = level.animScriptData.modelInfo[i];
 		if ( trav && trav->modelname[0] ) {
@@ -1193,6 +1209,17 @@ G_GetModelInfo
 */
 qboolean G_ParseAnimationFiles( char *modelname, gclient_t *cl );
 qboolean G_GetModelInfo( int clientNum, char *modelName, animModelInfo_t **modelInfo ) {
+
+	// Hoyo. Sanity checks for debugging/avoiding animation-related crashes
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS) {
+		G_Error("G_GetModelInfo: invalid clientNum %i\n", clientNum);
+		return qfalse;
+	}
+
+	if (!modelInfo) {
+		G_Error("G_GetModelInfo: NULL modelInfo pointer\n");
+		return qfalse;
+	}
 
 	if ( !G_CheckForExistingModelInfo( &level.clients[clientNum], modelName, modelInfo ) ) {
 		level.clients[clientNum].modelInfo = *modelInfo;

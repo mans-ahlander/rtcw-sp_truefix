@@ -430,3 +430,5 @@ void SV_Netchan_Transmit( client_t *client, msg_t *msg );    //int length, const
 void SV_Netchan_TransmitNextFragment( netchan_t *chan );
 qboolean SV_Netchan_Process( client_t *client, msg_t *msg );
 
+void SV_MarkGameRestarted(void); // Hoyo
+qboolean SV_GameRestartedThisFrame(void); // Hoyo

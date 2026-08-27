@@ -32,6 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 serverStatic_t svs;                 // persistant server info
 server_t sv;                        // local server
 vm_t            *gvm = NULL;                // game virtual machine // bk001212 init
+static qboolean sv_gameRestartedThisFrame = qfalse; // Hoyo. (For load-game-related crash bug fix)
 
 cvar_t  *sv_fps;                // time rate for running non-clients
 cvar_t  *sv_timeout;            // seconds without any message
@@ -63,6 +64,7 @@ cvar_t  *sv_gameskill;
 // done
 
 cvar_t  *sv_reloading;  //----(SA)	added
+
 
 /*
 =============================================================================
@@ -757,6 +759,8 @@ void SV_Frame( int msec ) {
 	int frameMsec;
 	int startTime;
 
+	sv_gameRestartedThisFrame = qfalse; // Hoyo
+
 	// the menu kills the server with this cvar
 	if ( sv_killserver->integer ) {
 		SV_Shutdown( "Server was killed.\n" );
@@ -861,3 +865,12 @@ void SV_Frame( int msec ) {
 }
 
 //============================================================================
+
+
+void SV_MarkGameRestarted(void) {
+	sv_gameRestartedThisFrame = qtrue;
+}
+
+qboolean SV_GameRestartedThisFrame(void) {
+	return sv_gameRestartedThisFrame;
+}
