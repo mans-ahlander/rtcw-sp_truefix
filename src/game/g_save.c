@@ -291,6 +291,31 @@ funcList_t funcList[] = {
 
 //=========================================================
 
+
+/*
+===============
+G_ValidateLoadedCameraState
+Added by Hoyo. Validate camera state from a save file
+===============
+*/
+static void G_ValidateLoadedCameraState(void) {
+	gentity_t* player;
+
+	player = &g_entities[0];
+
+	if (!player->client) {
+		return;
+	}
+
+	if (player->client->cameraPortal) {
+		return;
+	}
+
+	player->s.eFlags &= ~EF_VIEWING_CAMERA;
+	player->client->ps.eFlags &= ~EF_VIEWING_CAMERA;
+}
+
+
 /*
 ===============
 G_SaveWriteError
@@ -1905,6 +1930,9 @@ void G_LoadGame( char *filename ) {
 	}
 
 	level.lastLoadTime = leveltime;
+
+
+	G_ValidateLoadedCameraState(); // Hoyo
 
 /*
 	// always save to the "current" savegame
