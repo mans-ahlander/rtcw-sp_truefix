@@ -697,6 +697,10 @@ void AICast_Think( int client, float thinktime ) {
 	// check enemy health
 	if ( cs->enemyNum >= 0 && g_entities[cs->enemyNum].health <= 0 ) {
 		cs->enemyNum = -1;
+
+		if (cs->aiState == AISTATE_QUERY) { // Hoyo. We should change the state right away, instead of catching it in AICast_QueryThink
+			AICast_StateChange(cs, AISTATE_RELAXED);
+		}
 	}
 	//
 	// if the previous movetype was temporary, set it back
@@ -1651,48 +1655,19 @@ void AICast_QueryThink(cast_state_t* cs) {
 	// Hoyo: Added validation of enemyNum, entityNum, ocs.
 	// This used to cause some random crashes, like when missing the jump at dam.
 	// <-- Hoyo added
-	if (cs->enemyNum < 0 || cs->enemyNum >= MAX_CLIENTS) {
-		
-		// Commented out debug for now. It seems to be working well.
-		//Com_Printf(
-		//	"AICast_QueryThink: INVALID enemyNum=%d cs=%p entityNum=%d state=%d\n",
-		//	cs->enemyNum,
-		//	cs,
-		//	cs->entityNum,
-		//	cs->aiState
-		//);
-
+	if (cs->enemyNum < 0 || cs->enemyNum >= level.maxclients) {
 		AICast_StateChange(cs, AISTATE_RELAXED);
 		return;
 	}
 
-	if (cs->entityNum < 0 || cs->entityNum >= MAX_GENTITIES) {
-		//Com_Printf(
-		//	"AICast_QueryThink: INVALID entityNum=%d cs=%p enemyNum=%d\n",
-		//	cs->entityNum,
-		//	cs,
-		//	cs->enemyNum
-		//);
+	ocs = AICast_GetCastState(cs->enemyNum);
+	if (!ocs) {
+		AICast_StateChange(cs, AISTATE_RELAXED);
 		return;
 	}
 	// --> Hoyo added
 
 	ent = &g_entities[cs->entityNum];
-	ocs = AICast_GetCastState(cs->enemyNum);
-
-	// <-- Hoyo added
-	if (!ocs) {
-		Com_Printf(
-			"AICast_QueryThink: NULL ocs! enemyNum=%d cs=%p entityNum=%d\n",
-			cs->enemyNum,
-			cs,
-			cs->entityNum
-		);
-
-		AICast_StateChange(cs, AISTATE_RELAXED);
-		return;
-	}
-	// --> Hoyo added
 
 	// never crouch while in this state (by choice anyway)
 	cs->attackcrouch_time = 0;
