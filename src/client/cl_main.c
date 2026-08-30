@@ -1983,6 +1983,14 @@ void CL_Frame( int msec ) {
 		return;
 	}
 
+	/*
+	 * Hoyo - speedrun transition load removal.
+	 * Report whether the UI currently owns keyboard/mouse input.
+	 */
+	SV_SpeedrunUICatcher(
+		(cls.keyCatchers & KEYCATCH_UI) != 0
+	);
+
 	if ( cls.cddialog ) {
 		// bring up the cd error dialog if needed
 		cls.cddialog = qfalse;

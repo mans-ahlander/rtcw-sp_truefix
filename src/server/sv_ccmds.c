@@ -491,6 +491,10 @@ void    SV_LoadGame_f( void ) {
 		return;
 	}
 
+	// Hoyo - speedrun load timing.
+	// A valid savegame load is beginning.
+	SV_SpeedrunSetState(SR_STATE_LOADING, qtrue);
+
 	//buffer = Hunk_AllocateTempMemory(size);
 	FS_ReadFile( filename, (void **)&buffer );
 
