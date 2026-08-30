@@ -233,3 +233,21 @@ void SV_SpeedrunUICatcher(qboolean active) {
 
 	SV_SpeedrunUpdateLoadRemoval();
 }
+
+void SV_SpeedrunReset(void) {
+	speedrunTransitionPending = qfalse;
+	speedrunWatchUICatcher = qfalse;
+	speedrunUICatcherSeen = qfalse;
+
+	// All telemetry flags describe transient state
+	// belonging to the current game session.
+	g_speedrunState.flags = 0;
+
+	SR_DEBUG(
+		"SPEEDRUN: RESET map=%s "
+		"mapSequence=%u transitionSequence=%u\n",
+		g_speedrunState.mapName,
+		g_speedrunState.mapSequence,
+		g_speedrunState.transitionSequence
+	);
+}
