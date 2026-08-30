@@ -990,6 +990,10 @@ CL_Disconnect_f
 */
 void CL_Disconnect_f( void ) {
 	SCR_StopCinematic();
+
+	// Hoyo - abandon any pending speedrun transition/load state
+	SV_SpeedrunReset();
+
 	// RF, make sure loading variables are turned off
 	Cvar_Set( "savegame_loading", "0" );
 	Cvar_Set( "g_reloading", "0" );
@@ -2051,8 +2055,12 @@ void CL_Frame( int msec ) {
 	// A local game VM restart may have unloaded qagame after the current server frame was generated.
 	// Do not run cgame against that stale server frame.
 	// The next server frame will carry the map_restart notification and refreshed snapshot.
-	if (SV_GameRestartedThisFrame()) {
-		return;
+	if (SV_GameRestartPending()) {
+		// Do not enter cgame until the client system has received
+		// at least one snapshot from the restarted server generation.
+		if (!cl.snap.valid || !SV_IsPostRestartSnapshot(cl.snap.snapFlags)) {
+			return;
+		}
 	}
 
 	// decide on the serverTime to render

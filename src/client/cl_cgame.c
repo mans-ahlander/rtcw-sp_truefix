@@ -146,6 +146,17 @@ qboolean    CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		return qfalse;
 	}
 
+	// Hoyo - a native qagame restart invalidates cgame pointers into the previous game DLL. 
+	// Never expose pre-restart snapshots to cgame after that restart has occurred.
+	if (SV_GameRestartPending()) {
+		if (!SV_IsPostRestartSnapshot(clSnap->snapFlags)) {
+			return qfalse;
+		}
+
+		// The first snapshot from the new server generation is now being delivered to cgame.
+		SV_GameRestartSnapshotReceived();
+	}
+
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
 	if ( cl.parseEntitiesNum - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
