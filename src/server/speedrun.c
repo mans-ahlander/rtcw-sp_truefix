@@ -18,6 +18,48 @@ speedrunState_t g_speedrunState = {
 	0,
 };
 
+/*
+ * Internal load-removal state.
+ *
+ * A scripted level transition remains excluded from timing after the
+ * physical load has completed, until the post-load UI catcher is
+ * acquired and subsequently released.
+ */
+static qboolean speedrunTransitionPending = qfalse;
+static qboolean speedrunWatchUICatcher = qfalse;
+static qboolean speedrunUICatcherSeen = qfalse;
+
+static void SV_SpeedrunUpdateLoadRemoval(void) {
+	unsigned int oldFlags;
+	qboolean active;
+
+	oldFlags = g_speedrunState.flags;
+
+	active = (g_speedrunState.flags & SR_STATE_LOADING) || speedrunTransitionPending;
+
+	if (active) {
+		g_speedrunState.flags |= SR_STATE_LOAD_REMOVAL;
+	}
+	else {
+		g_speedrunState.flags &= ~SR_STATE_LOAD_REMOVAL;
+	}
+
+	if (oldFlags != g_speedrunState.flags) {
+		SR_DEBUG(
+			"SPEEDRUN: LOAD_REMOVAL %s map=%s "
+			"mapSequence=%u transitionSequence=%u flags=0x%X\n",
+			(g_speedrunState.flags & SR_STATE_LOAD_REMOVAL) ?
+			"ON" : "OFF",
+			g_speedrunState.mapName,
+			g_speedrunState.mapSequence,
+			g_speedrunState.transitionSequence,
+			g_speedrunState.flags
+		);
+	}
+}
+
+
+
 void SV_SpeedrunSetState(unsigned int flag, qboolean enabled) {
 	unsigned int oldFlags = g_speedrunState.flags;
 
@@ -38,6 +80,20 @@ void SV_SpeedrunSetState(unsigned int flag, qboolean enabled) {
 	}
 	else {
 		g_speedrunState.flags &= ~flag;
+	}
+
+	if (flag == SR_STATE_LOADING) {
+
+		/*
+		 * Full map loads drive load removal directly.
+		 * Same-map savegame restarts never set SR_STATE_LOADING.
+		 */
+		if (enabled && !speedrunTransitionPending) {
+			speedrunWatchUICatcher = qfalse;
+			speedrunUICatcherSeen = qfalse;
+		}
+
+		SV_SpeedrunUpdateLoadRemoval();
 	}
 
 	// Only print when something actually changed.
@@ -80,6 +136,14 @@ void SV_SpeedrunSetState(unsigned int flag, qboolean enabled) {
 void SV_SpeedrunTransition(void) {
 	g_speedrunState.transitionSequence++;
 
+	/*
+	 * A transition has been committed, but its actual map load may
+	 * still be several seconds away. Do not enable LOAD_REMOVAL here.
+	 */
+	speedrunTransitionPending = qtrue;
+	speedrunWatchUICatcher = qfalse;
+	speedrunUICatcherSeen = qfalse;
+
 	SR_DEBUG(
 		"SPEEDRUN: TRANSITION transitionSequence=%u "
 		"mapSequence=%u flags=0x%X\n",
@@ -98,6 +162,17 @@ void SV_SpeedrunNewMap(const char* mapName) {
 
 	g_speedrunState.mapSequence++;
 
+	if (speedrunTransitionPending) {
+		speedrunWatchUICatcher = qtrue;
+		speedrunUICatcherSeen = qfalse;
+
+		SR_DEBUG(
+			"SPEEDRUN: UI WATCH START map=%s flags=0x%X\n",
+			g_speedrunState.mapName,
+			g_speedrunState.flags
+		);
+	}
+
 	SR_DEBUG(
 		"SPEEDRUN: NEW MAP %s mapSequence=%u "
 		"transitionSequence=%u flags=0x%X\n",
@@ -106,4 +181,55 @@ void SV_SpeedrunNewMap(const char* mapName) {
 		g_speedrunState.transitionSequence,
 		g_speedrunState.flags
 	);
+}
+
+void SV_SpeedrunUICatcher(qboolean active) {
+
+	if (!speedrunTransitionPending ||
+		!speedrunWatchUICatcher) {
+		return;
+	}
+
+	/*
+	 * Do not sample UI ownership during the physical map load.
+	 *
+	 * This also prevents stale catcher state from the previous map
+	 * from satisfying the transition latch.
+	 */
+	if (g_speedrunState.flags & SR_STATE_LOADING) {
+		return;
+	}
+
+	if (active) {
+		if (!speedrunUICatcherSeen) {
+			SR_DEBUG(
+				"SPEEDRUN: UI CATCHER ACQUIRED map=%s flags=0x%X\n",
+				g_speedrunState.mapName,
+				g_speedrunState.flags
+			);
+		}
+
+		speedrunUICatcherSeen = qtrue;
+		return;
+	}
+
+	/*
+	 * A false catcher state means nothing until we have first
+	 * observed the post-load UI actually acquire input.
+	 */
+	if (!speedrunUICatcherSeen) {
+		return;
+	}
+
+	SR_DEBUG(
+		"SPEEDRUN: UI CATCHER RELEASED map=%s flags=0x%X\n",
+		g_speedrunState.mapName,
+		g_speedrunState.flags
+	);
+
+	speedrunTransitionPending = qfalse;
+	speedrunWatchUICatcher = qfalse;
+	speedrunUICatcherSeen = qfalse;
+
+	SV_SpeedrunUpdateLoadRemoval();
 }

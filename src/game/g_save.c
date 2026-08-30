@@ -209,6 +209,9 @@ static ignoreField_t gclientIgnoreFields[] = {
 	//{CFOFS(ps.eventSequence),	sizeof(int)},
 	//{CFOFS(ps.oldEventSequence),sizeof(int)},
 
+	// Added by Hoyo. Runtime animation data, recreated when model data is initialized. Never restore the raw pointer stored in the savegame.
+	{CFOFS(modelInfo), sizeof(animModelInfo_t *)},
+
 	{0, 0}
 };
 
@@ -287,6 +290,31 @@ funcList_t funcList[] = {
 
 
 //=========================================================
+
+
+/*
+===============
+G_ValidateLoadedCameraState
+Added by Hoyo. Validate camera state from a save file
+===============
+*/
+static void G_ValidateLoadedCameraState(void) {
+	gentity_t* player;
+
+	player = &g_entities[0];
+
+	if (!player->client) {
+		return;
+	}
+
+	if (player->client->cameraPortal) {
+		return;
+	}
+
+	player->s.eFlags &= ~EF_VIEWING_CAMERA;
+	player->client->ps.eFlags &= ~EF_VIEWING_CAMERA;
+}
+
 
 /*
 ===============
@@ -1902,6 +1930,9 @@ void G_LoadGame( char *filename ) {
 	}
 
 	level.lastLoadTime = leveltime;
+
+
+	G_ValidateLoadedCameraState(); // Hoyo
 
 /*
 	// always save to the "current" savegame

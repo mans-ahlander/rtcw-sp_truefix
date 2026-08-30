@@ -277,8 +277,9 @@ static void SV_Map_f( void ) {
 	// and thus nuke the arguments of the map command
 	Q_strncpyz( mapname, map, sizeof( mapname ) );
 
-	// Hoyo - speedrun load timing
-	// A real map load is beginning.
+	// Hoyo - speedrun load timing.
+	// SV_SpawnServer enters the full map-loading path and displays
+	// the loading screen. Same-map savegame restarts bypass this path.
 	SV_SpeedrunSetState(SR_STATE_LOADING, qtrue);
 
 	// start up the map
@@ -397,6 +398,9 @@ static void SV_MapRestart_f( void ) {
 	sv.restarting = qtrue;
 
 	SV_RestartGameProgs();
+
+	// Hoyo. The native game DLL may have been unloaded and reloaded in a different area. Do not allow cgame to process the previous server frame afterward.
+	SV_MarkGameRestarted();
 
 	// run a few frames to allow everything to settle
 	for ( i = 0 ; i < 3 ; i++ ) {
