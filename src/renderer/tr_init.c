@@ -146,7 +146,7 @@ cvar_t  *r_picmip2;
 cvar_t  *r_showtris;
 cvar_t  *r_showsky;
 cvar_t  *r_shownormals;
-cvar_t  *r_drawPlayerClip; // Hoyo added
+cvar_t  *r_drawPlayerClips; // Hoyo added
 cvar_t  *r_finish;
 cvar_t  *r_clear;
 cvar_t  *r_swapInterval;
@@ -954,21 +954,34 @@ void GfxInfo_f( void ) {
 		ri.Printf( PRINT_ALL, "rendering primitives: " );
 		primitives = r_primitives->integer;
 		if ( primitives == 0 ) {
-			if ( qglLockArraysEXT ) {
-				primitives = 2;
-			} else {
-				primitives = 1;
-			}
+			//if ( qglLockArraysEXT ) {
+			//	primitives = 2;
+			//} else {
+			//	primitives = 1;
+			//}
+			primitives = 2; // Change by Hoyo
 		}
 		if ( primitives == -1 ) {
 			ri.Printf( PRINT_ALL, "none\n" );
 		} else if ( primitives == 2 ) {
 			ri.Printf( PRINT_ALL, "single glDrawElements\n" );
 		} else if ( primitives == 1 ) {
-			ri.Printf( PRINT_ALL, "multiple glArrayElement\n" );
+			ri.Printf( PRINT_ALL, "multiple glArrayElement (legacy)\n" );
 		} else if ( primitives == 3 ) {
-			ri.Printf( PRINT_ALL, "multiple glColor4ubv + glTexCoord2fv + glVertex3fv\n" );
+			ri.Printf( PRINT_ALL, "multiple glColor4ubv + glTexCoord2fv + glVertex3fv (legacy)\n" );
 		}
+	}
+
+	// Hoyo. Add warning about the poor performance of r_primitives->integer == 1 or 3
+	if (r_primitives->integer == 1 ||
+		r_primitives->integer == 3) {
+		ri.Printf(
+			PRINT_WARNING,
+			"WARNING: r_primitives %i selects a legacy rendering path "
+			"that may severely reduce performance. "
+			"Use r_primitives 0 or 2 unless specifically required.\n",
+			r_primitives->integer
+		);
 	}
 
 	ri.Printf( PRINT_ALL, "texturemode: %s\n", r_textureMode->string );
@@ -1209,7 +1222,7 @@ void R_Register( void ) {
 	r_showtris = ri.Cvar_Get( "r_showtris", "0", CVAR_CHEAT );
 	r_showsky = ri.Cvar_Get( "r_showsky", "0", CVAR_CHEAT );
 	r_shownormals = ri.Cvar_Get( "r_shownormals", "0", CVAR_CHEAT );
-	r_drawPlayerClip = ri.Cvar_Get("r_drawPlayerClip", "0", CVAR_CHEAT); // Hoyo added
+	r_drawPlayerClips = ri.Cvar_Get("r_drawPlayerClips", "0", CVAR_CHEAT); // Hoyo added
 	r_clear = ri.Cvar_Get( "r_clear", "0", CVAR_CHEAT );
 	r_offsetFactor = ri.Cvar_Get( "r_offsetfactor", "-1", CVAR_CHEAT );
 	r_offsetUnits = ri.Cvar_Get( "r_offsetunits", "-2", CVAR_CHEAT );

@@ -1166,7 +1166,7 @@ extern cvar_t  *r_logFile;                      // number of frames to emit GL l
 extern cvar_t  *r_showtris;                     // enables wireframe rendering of the world
 extern cvar_t  *r_showsky;                      // forces sky in front of all surfaces
 extern cvar_t  *r_shownormals;                  // draws wireframe normals
-extern cvar_t  *r_drawPlayerClip;				// Hoyo added
+extern cvar_t  *r_drawPlayerClips;				// Hoyo added
 extern cvar_t  *r_clear;                        // force screen clear every frame
 
 extern cvar_t  *r_shadows;                      // controls shadows: 0 = none, 1 = blur, 2 = stencil, 3 = black planar projection
@@ -1717,11 +1717,12 @@ typedef enum {
 // Ridah, these aren't enough for cool effects
 //#define	MAX_POLYS		256
 //#define	MAX_POLYVERTS	1024
-// Hoyo, not enough if we want to debug player clip brushes etc.
-//#define MAX_POLYS       4096
-//#define MAX_POLYVERTS   8192
-#define MAX_POLYS       8192
-#define MAX_POLYVERTS   16384
+
+#define MAX_POLYS       4096
+#define MAX_POLYVERTS   8192
+// Hoyo, not enough if we want to debug player clip brushes etc. // LAG?
+//#define MAX_POLYS       8192
+//#define MAX_POLYVERTS   16384
 // done.
 
 // all of the information needed by the back end must be
