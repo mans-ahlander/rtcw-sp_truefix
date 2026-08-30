@@ -277,8 +277,9 @@ static void SV_Map_f( void ) {
 	// and thus nuke the arguments of the map command
 	Q_strncpyz( mapname, map, sizeof( mapname ) );
 
-	// Hoyo - speedrun load timing
-	// A real map load is beginning.
+	// Hoyo - speedrun load timing.
+	// SV_SpawnServer enters the full map-loading path and displays
+	// the loading screen. Same-map savegame restarts bypass this path.
 	SV_SpeedrunSetState(SR_STATE_LOADING, qtrue);
 
 	// start up the map
@@ -490,10 +491,6 @@ void    SV_LoadGame_f( void ) {
 		Com_Printf( "Can't find savegame %s\n", filename );
 		return;
 	}
-
-	// Hoyo - speedrun load timing.
-	// A valid savegame load is beginning.
-	SV_SpeedrunSetState(SR_STATE_LOADING, qtrue);
 
 	//buffer = Hunk_AllocateTempMemory(size);
 	FS_ReadFile( filename, (void **)&buffer );

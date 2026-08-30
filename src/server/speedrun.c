@@ -83,10 +83,10 @@ void SV_SpeedrunSetState(unsigned int flag, qboolean enabled) {
 	}
 
 	if (flag == SR_STATE_LOADING) {
+
 		/*
-		 * An ordinary load must not inherit transition UI state.
-		 * A genuine scripted transition will already have
-		 * speedrunTransitionPending set.
+		 * Full map loads drive load removal directly.
+		 * Same-map savegame restarts never set SR_STATE_LOADING.
 		 */
 		if (enabled && !speedrunTransitionPending) {
 			speedrunWatchUICatcher = qfalse;
