@@ -14,7 +14,8 @@
 ### Fixed
 
 * Fixed the Boss1 opening cutscene race that could leave the boss-room door out of sequence after skipping the cutscene.
-* Fixed inconsistent camera state when loading affected savegames, which could cause soft-locks or incorrect world visibility after the Boss1-to-Forest transition.
+* Fixed stale camera commands being executed across level transitions.
+  * Fixed inconsistent camera state when loading affected savegames after such a case.
 * Fixed a native DLL restart race where cgame could process a stale server frame after qagame had been unloaded and reloaded.
 * Fixed an `AICast_QueryThink` invalid access that could occur when an AI's query target died while the AI remained in the query state.
 

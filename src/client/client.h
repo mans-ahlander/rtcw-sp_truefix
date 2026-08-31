@@ -223,6 +223,12 @@ typedef struct {
 
 	// big stuff at end of structure so most offsets are 15 bits or less
 	netchan_t netchan;
+
+	// <-- Hoyo. Added to detect and avoidstale startCam commands from previous levels
+	int gamestateServerCommandSequence;
+	qboolean gamestateMapChange;
+	// Hoyo -->
+
 } clientConnection_t;
 
 extern clientConnection_t clc;

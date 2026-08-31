@@ -642,6 +642,7 @@
 {"G_FindFuncAtAddress", (byte *)G_FindFuncAtAddress},
 {"G_SaveWrite", (byte *)G_SaveWrite},
 {"G_SaveWriteError", (byte *)G_SaveWriteError},
+{"G_ValidatePlayerCameraState", (byte *)G_ValidatePlayerCameraState},
 {"SP_props_flamethrower", (byte *)SP_props_flamethrower},
 {"props_flamethrower_init", (byte *)props_flamethrower_init},
 {"props_flamethrower_use", (byte *)props_flamethrower_use},

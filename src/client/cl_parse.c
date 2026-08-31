@@ -385,16 +385,24 @@ void CL_ParseGamestate( msg_t *msg ) {
 	entityState_t nullstate;
 	int cmd;
 	char            *s;
+	char oldMapname[MAX_QPATH];
+	char newMapname[MAX_QPATH];
+	const char* serverInfo;
+	const char* mapname;
 
 	Con_Close();
 
 	clc.connectPacketCount = 0;
+
+	Q_strncpyz(oldMapname, cl.mapname, sizeof(oldMapname));
 
 	// wipe local client state
 	CL_ClearState();
 
 	// a gamestate always marks a server command sequence
 	clc.serverCommandSequence = MSG_ReadLong( msg );
+
+	clc.gamestateServerCommandSequence = clc.serverCommandSequence;
 
 	// parse all the configstrings and baselines
 	cl.gameState.dataCount = 1; // leave a 0 at the beginning for uninitialized configstrings
@@ -435,6 +443,11 @@ void CL_ParseGamestate( msg_t *msg ) {
 			Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
 		}
 	}
+
+	serverInfo = cl.gameState.stringData + cl.gameState.stringOffsets[CS_SERVERINFO];
+	mapname = Info_ValueForKey(serverInfo, "mapname");
+	Com_sprintf(newMapname, sizeof(newMapname), "maps/%s.bsp", mapname);
+	clc.gamestateMapChange = oldMapname[0] && Q_stricmp(oldMapname, newMapname);
 
 	clc.clientNum = MSG_ReadLong( msg );
 	// read the checksum feed
