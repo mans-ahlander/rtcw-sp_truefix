@@ -1094,6 +1094,7 @@ extern vmCvar_t g_triggerFeedback;
 void G_InitTriggerFeedback(void);
 void G_RegisterTriggerFeedbackSound(void);
 // Hoyo ->
+extern void G_ValidatePlayerCameraState(void); // Added by Hoyo
 
 extern vmCvar_t g_reloading;        //----(SA)	added
 

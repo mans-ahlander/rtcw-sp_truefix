@@ -642,6 +642,7 @@ extern byte * G_FindFuncByName ( char * name ) ;
 extern funcList_t * G_FindFuncAtAddress ( byte * adr ) ;
 extern int G_SaveWrite ( const void * buffer , int len , fileHandle_t f ) ;
 extern void G_SaveWriteError ( void ) ;
+extern void G_ValidatePlayerCameraState ( void ) ;
 extern void SP_props_flamethrower ( gentity_t * ent ) ;
 extern void props_flamethrower_init ( gentity_t * ent ) ;
 extern void props_flamethrower_use ( gentity_t * ent , gentity_t * other , gentity_t * activator ) ;

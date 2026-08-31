@@ -1513,8 +1513,6 @@ void Cmd_StopCamera_f(gentity_t* ent) {
 		ent->s.eFlags &= ~EF_VIEWING_CAMERA;
 		ent->client->ps.eFlags &= ~EF_VIEWING_CAMERA;
 
-		trap_SpeedrunState(SR_STATE_CUTSCENE, qfalse); // Hoyo. Added for speedrunning ASL script
-
 		// (SA) trying this in client to avoid 1 frame of player drawing
 		//		ent->s.eFlags &= ~EF_NODRAW;
 		//		ent->client->ps.eFlags &= ~EF_NODRAW;
@@ -1529,6 +1527,12 @@ void Cmd_StopCamera_f(gentity_t* ent) {
 			}
 		}
 	}
+
+	// Hoyo. Camera is stopping regardless of whether the portal was already lost.
+	ent->s.eFlags &= ~EF_VIEWING_CAMERA;
+	ent->client->ps.eFlags &= ~EF_VIEWING_CAMERA;
+
+	trap_SpeedrunState(SR_STATE_CUTSCENE, qfalse); // Hoyo. Added for speedrunning ASL script
 }
 
 /*

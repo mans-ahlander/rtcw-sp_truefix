@@ -2586,6 +2586,12 @@ void G_RunFrame( int levelTime ) {
 	level.time = levelTime;
 	msec = level.time - level.previousTime;
 
+	// Hoyo - repair impossible half-active camera state.
+	// This can occur around level/camera transitions.
+	if (g_gametype.integer == GT_SINGLE_PLAYER) {
+		G_ValidatePlayerCameraState();
+	}
+
 	// Ridah, check for loading a save game
 	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
 		extern void AICast_CheckLoadGame( void );
