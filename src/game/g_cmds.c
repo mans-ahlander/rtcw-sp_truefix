@@ -1257,7 +1257,7 @@ void Cmd_SavePos_f(gentity_t* ent) {
 
 	trap_SendServerCommand(
 		ent - g_entities,
-		"print \"Speedrun position saved.\n\""
+		"print \"Position saved.\n\""
 	);
 }
 
@@ -1275,7 +1275,7 @@ void Cmd_LoadPos_f(gentity_t* ent) {
 	if (!g_savedSpeedrunPositionValid) {
 		trap_SendServerCommand(
 			ent - g_entities,
-			"print \"No speedrun position saved.\n\""
+			"print \"No position saved.\n\""
 		);
 		return;
 	}
