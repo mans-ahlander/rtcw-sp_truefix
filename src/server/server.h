@@ -266,6 +266,7 @@ void SV_SpeedrunTransition(void);
 void SV_SpeedrunNewMap(const char* mapName);
 void SV_SpeedrunUICatcher(qboolean active);
 void SV_SpeedrunReset(void);
+void SV_SpeedrunPostLoadUI(void);
 
 //===========================================================
 

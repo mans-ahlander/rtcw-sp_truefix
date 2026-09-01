@@ -149,11 +149,14 @@ static void SV_Map_f( void ) {
 	qboolean killBots, cheat, buildScript;
 	char expanded[MAX_QPATH];
 	int savegameTime = -1;
+	qboolean isSavegameLoad;
 
 	map = Cmd_Argv( 1 );
 	if ( !map ) {
 		return;
 	}
+
+	isSavegameLoad = strstr(map, ".svg") != NULL;
 
 	buildScript = Cvar_VariableIntegerValue( "com_buildScript" );
 

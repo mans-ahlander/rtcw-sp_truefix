@@ -25,7 +25,7 @@ speedrunState_t g_speedrunState = {
  * physical load has completed, until the post-load UI catcher is
  * acquired and subsequently released.
  */
-static qboolean speedrunTransitionPending = qfalse;
+static qboolean speedrunPostLoadUIPending = qfalse;
 static qboolean speedrunWatchUICatcher = qfalse;
 static qboolean speedrunUICatcherSeen = qfalse;
 
@@ -35,7 +35,7 @@ static void SV_SpeedrunUpdateLoadRemoval(void) {
 
 	oldFlags = g_speedrunState.flags;
 
-	active = (g_speedrunState.flags & SR_STATE_LOADING) || speedrunTransitionPending;
+	active = (g_speedrunState.flags & SR_STATE_LOADING) || speedrunPostLoadUIPending;
 
 	if (active) {
 		g_speedrunState.flags |= SR_STATE_LOAD_REMOVAL;
@@ -88,7 +88,7 @@ void SV_SpeedrunSetState(unsigned int flag, qboolean enabled) {
 		 * Full map loads drive load removal directly.
 		 * Same-map savegame restarts never set SR_STATE_LOADING.
 		 */
-		if (enabled && !speedrunTransitionPending) {
+		if (enabled && !speedrunPostLoadUIPending) {
 			speedrunWatchUICatcher = qfalse;
 			speedrunUICatcherSeen = qfalse;
 		}
@@ -140,7 +140,7 @@ void SV_SpeedrunTransition(void) {
 	 * A transition has been committed, but its actual map load may
 	 * still be several seconds away. Do not enable LOAD_REMOVAL here.
 	 */
-	speedrunTransitionPending = qtrue;
+	speedrunPostLoadUIPending = qtrue;
 	speedrunWatchUICatcher = qfalse;
 	speedrunUICatcherSeen = qfalse;
 
@@ -162,7 +162,7 @@ void SV_SpeedrunNewMap(const char* mapName) {
 
 	g_speedrunState.mapSequence++;
 
-	if (speedrunTransitionPending) {
+	if (speedrunPostLoadUIPending) {
 		speedrunWatchUICatcher = qtrue;
 		speedrunUICatcherSeen = qfalse;
 
@@ -185,7 +185,7 @@ void SV_SpeedrunNewMap(const char* mapName) {
 
 void SV_SpeedrunUICatcher(qboolean active) {
 
-	if (!speedrunTransitionPending ||
+	if (!speedrunPostLoadUIPending ||
 		!speedrunWatchUICatcher) {
 		return;
 	}
@@ -227,7 +227,7 @@ void SV_SpeedrunUICatcher(qboolean active) {
 		g_speedrunState.flags
 	);
 
-	speedrunTransitionPending = qfalse;
+	speedrunPostLoadUIPending = qfalse;
 	speedrunWatchUICatcher = qfalse;
 	speedrunUICatcherSeen = qfalse;
 
@@ -235,7 +235,7 @@ void SV_SpeedrunUICatcher(qboolean active) {
 }
 
 void SV_SpeedrunReset(void) {
-	speedrunTransitionPending = qfalse;
+	speedrunPostLoadUIPending = qfalse;
 	speedrunWatchUICatcher = qfalse;
 	speedrunUICatcherSeen = qfalse;
 
@@ -249,5 +249,38 @@ void SV_SpeedrunReset(void) {
 		g_speedrunState.mapName,
 		g_speedrunState.mapSequence,
 		g_speedrunState.transitionSequence
+	);
+}
+
+/*
+ * The loading cgame has opened the post-load briefing UI.
+ * 
+ * This can happen after a scripted transition, but also after direct loads such as spmap/spdevmap.
+ * Keep load removal active until the UI catcher has actually been acquired and released.
+ */
+void SV_SpeedrunPostLoadUI(void) {
+	speedrunPostLoadUIPending = qtrue;
+
+	/*
+	 * Do not reset an already-observed catcher if the briefing
+	 * popup is requested more than once during the same load.
+	 */
+	if (!speedrunWatchUICatcher) {
+		speedrunUICatcherSeen = qfalse;
+	}
+
+	speedrunWatchUICatcher = qtrue;
+
+	/*
+	 * Usually SR_STATE_LOADING is still set here, so LOAD_REMOVAL
+	 * is already active. This also handles the case where the popup
+	 * arrives just after physical loading has finished.
+	 */
+	SV_SpeedrunUpdateLoadRemoval();
+
+	SR_DEBUG(
+		"SPEEDRUN: POST-LOAD UI map=%s flags=0x%X\n",
+		g_speedrunState.mapName,
+		g_speedrunState.flags
 	);
 }

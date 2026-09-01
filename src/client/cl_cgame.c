@@ -42,6 +42,7 @@ extern qboolean getCameraInfo( int camNum, int time, vec3_t *origin, vec3_t *ang
 extern void SV_SendMoveSpeedsToGame( int entnum, char *text );
 extern qboolean SV_GetModelInfo( int clientNum, char *modelName, animModelInfo_t **modelInfo );
 
+extern void SV_SpeedrunPostLoadUI(void);
 
 /*
 ====================
@@ -816,6 +817,16 @@ int CL_CgameSystemCalls( int *args ) {
 
 	case CG_INGAME_POPUP:
 		if ( VMA( 1 ) && !Q_stricmp( VMA( 1 ), "briefing" ) ) {  //----(SA) added
+			/*
+			 * Hoyo - keep speedrun load removal active until a normal post-load briefing has actually been dismissed.
+			 *
+			 * Savegame loads also pass through the briefing popup path,
+			 * but their briefing is automatically dismissed and must not arm the post-load UI latch.
+			 */
+			if (!Cvar_VariableIntegerValue("savegame_loading")) {
+				SV_SpeedrunPostLoadUI();
+			}
+
 			VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_BRIEFING );
 			return 0;
 		}
