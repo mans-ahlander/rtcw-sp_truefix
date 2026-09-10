@@ -1612,15 +1612,6 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		return;
 	}
 
-	/* Hoyo. Moved to R_RenderView for proper total surface count in a frame
-	// if we overflowed MAX_DRAWSURFS, the drawsurfs
-	// wrapped around in the buffer and we will be missing
-	// the first surfaces, not the last ones
-	if ( numDrawSurfs > MAX_DRAWSURFS ) {
-		numDrawSurfs = MAX_DRAWSURFS;
-	}
-	*/
-
 	// sort the drawsurfs by sort type, then orientation, then shader
 	qsortFast( drawSurfs, numDrawSurfs, sizeof( drawSurf_t ) );
 

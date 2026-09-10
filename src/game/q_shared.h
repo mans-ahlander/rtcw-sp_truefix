@@ -35,7 +35,8 @@ If you have questions concerning this license or the applicable additional terms
 // Update from Knightmare's 1.42d to 1.43 by Hoyo.
 // 1.43a is including LiveSplit features. 1.43b with added speedrunning util.
 // 1.43c is updated LiveSplit features (loadremoval) and additional crash fixes
-#define Q3_VERSION      "Wolf 1.43c"	
+// 1.43d fixes crash caused by stale snapshots after restart and other stability issues.
+#define Q3_VERSION      "Wolf 1.43d"	
 // ver 1.0.0	- release
 // ver 1.0.1	- post-release work
 // ver 1.1.0	- patch 1 (12/12/01)

@@ -35,6 +35,38 @@ If you have questions concerning this license or the applicable additional terms
 
 
 
+
+/*
+==================
+CG_CheckServerRestart
+By Hoyo for crash fix on quickload after dll resets.
+==================
+*/
+static int snapshotServerId = -1;
+
+static void CG_CheckServerRestart(void) {
+	char buffer[32];
+	int serverId;
+
+	trap_Cvar_VariableStringBuffer("sv_serverid", buffer, sizeof(buffer));
+	serverId = atoi(buffer);
+
+	if (snapshotServerId == -1) {
+		snapshotServerId = serverId;
+		return;
+	}
+
+	if (serverId != snapshotServerId) {
+		// A snapshot prefetched before the restart may still be cached here.
+		// Discard it so CG_ReadNextSnapshot() must obtain a snapshot from
+		// the current server generation.
+		cg.nextSnap = NULL;
+
+		snapshotServerId = serverId;
+	}
+}
+
+
 /*
 ==================
 CG_ResetEntity
@@ -454,6 +486,8 @@ of an interpolating one)
 void CG_ProcessSnapshots( void ) {
 	snapshot_t      *snap;
 	int n;
+
+	CG_CheckServerRestart(); // Hoyo
 
 	// see what the latest snapshot the client system has is
 	trap_GetCurrentSnapshotNumber( &n, &cg.latestSnapshotTime );

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.43d
+
+### Changed
+
+* Updated speedrun telemetry handling for maps started through `spmap`.
+* Updated `savepos` / `loadpos` console feedback text.
+
+### Fixed
+
+* Fixed a remaining native game DLL restart race where cgame could transition a cached pre-restart snapshot after qagame had already been unloaded and reloaded.
+  * This could leave animation model pointers referring to the previous qagame DLL and cause intermittent access violations during quickloads or other same-map restarts.
+* Fixed AI cast-state initialization so the full allocated state array is cleared and only allocated entries are initialized.
+* Fixed cast-state bounds validation so indices outside the allocated AI client-state array are rejected.
+
 ## 1.43c
 
 ### Added

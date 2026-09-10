@@ -114,7 +114,8 @@ void hA3Dg_ExportRenderGeom( refexport_t *incoming_re );
 #endif
 
 extern void SV_BotFrame( int time );
-extern qboolean SV_GameRestartedThisFrame(void);
+extern qboolean SV_GameRestartPending(void);
+extern qboolean SV_IsPostRestartSnapshot(int snapFlags);
 void CL_CheckForResend( void );
 void CL_ShowIP_f( void );
 void CL_ServerStatus_f( void );

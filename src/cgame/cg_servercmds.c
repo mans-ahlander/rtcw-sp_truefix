@@ -703,14 +703,6 @@ static void CG_MapRestart( void ) {
 	cg.v_noFireTime = 0;
 	cg.v_fireTime = 0;
 
-	// RF, clear out animScriptData so we recalc everything and get new pointers from server
-	//memset( cgs.animScriptData.modelInfo, 0, sizeof( cgs.animScriptData.modelInfo ) );
-	//for ( i = 0; i < MAX_CLIENTS; i++ ) {
-	//	if ( cgs.clientinfo[i].infoValid ) {
-	//		CG_LoadClientInfo( &cgs.clientinfo[i] );    // re-register the valid clients
-	//	}
-	//}
-
 	// Added by Hoyo. Clear animation data that points into the game module.
 	// A native qagame restart may load the DLL at a different address.
 	memset(cgs.animScriptData.modelInfo, 0, sizeof(cgs.animScriptData.modelInfo));
