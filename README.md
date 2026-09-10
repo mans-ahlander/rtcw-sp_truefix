@@ -2,11 +2,15 @@
 
 A conservative stability and bug-fix patch for the single-player version of Return to Castle Wolfenstein (RTCW).
 
+**Current release: 1.43d**
+
 The primary goal of TrueFix is to improve stability and correct genuine engine and game-code defects, including crashes, memory corruption, invalid memory accesses, save/load issues, and other unsafe or unintended behavior, while preserving the original game's gameplay, physics, timing, and overall behavior as closely as possible.
 
 Gameplay-affecting changes are intentionally avoided, even when the original behavior could reasonably be considered a bug, unless changing that behavior is necessary to correct a stability issue or other clear technical defect.
 
 TrueFix also includes a small number of features intended specifically for RTCW speedrunning. This includes built-in speedrun telemetry designed to provide a stable interface for LiveSplit ASL autosplitters, allowing timing logic such as level transitions and load removal to be handled directly from authoritative game state rather than inferred from unrelated memory values.
+
+Version 1.43d focuses on further save/load and native game-DLL restart stability, AI cast-state initialization and bounds hardening, and small speedrun telemetry compatibility improvements.
 
 ## Based on
 
@@ -54,7 +58,7 @@ TrueFix includes a small set of speedrunning-oriented additions that do not alte
 
 These include a stable telemetry interface exposed by the engine for use by external timing tools such as LiveSplit. The telemetry reports authoritative game state including map changes, level transitions, loading state, cutscenes, and dedicated load-removal state.
 
-For supported autosplitters, this allows timing decisions to be based on explicit game state instead of fragile version-specific heuristics wherever possible.
+For supported autosplitters, this allows timing decisions to be based on explicit game state instead of fragile version-specific heuristics wherever possible. Version 1.43d also improves telemetry handling for maps started through `spmap`.
 
 Speedrunning-specific functionality is intended to remain isolated from normal gameplay behavior.
 
