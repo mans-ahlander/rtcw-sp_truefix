@@ -1358,6 +1358,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_InitMemory();
 
+	// Hoyo - practice savestate
+	G_ClearPracticeSaveState();
+
 	// Hoyo. Reset speedrun state
 	trap_SpeedrunState(SR_STATE_LEVEL_TRANSITION, qfalse);
 	trap_SpeedrunState(SR_STATE_CUTSCENE, qfalse);

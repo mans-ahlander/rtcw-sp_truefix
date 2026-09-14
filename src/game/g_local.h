@@ -1077,6 +1077,7 @@ void Props_Chair_Skyboxtouch( gentity_t *ent );
 
 extern level_locals_t level;
 extern gentity_t g_entities[MAX_GENTITIES];
+extern gclient_t g_clients[MAX_CLIENTS];
 extern gentity_t       *g_camEnt;
 
 #define FOFS( x ) ( (int)&( ( (gentity_t *)0 )->x ) )
@@ -1395,6 +1396,8 @@ void    trap_BotResetWeaponState( int weaponstate );
 int     trap_GeneticParentsAndChildSelection( int numranks, float *ranks, int *parent1, int *parent2, int *child );
 
 void    trap_SnapVector( float *v );
+
+qboolean trap_PracticeRewind(int targetTime); // Hoyo
 
 typedef enum
 {

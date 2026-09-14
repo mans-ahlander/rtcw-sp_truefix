@@ -250,6 +250,7 @@ typedef enum {
 
 	G_SPEEDRUN_STATE, // Hoyo added
 	G_SPEEDRUN_TRANSITION, // Hoyo added
+	G_PRACTICE_REWIND, // Hoyo added
 
 	BOTLIB_SETUP = 200,             // ( void );
 	BOTLIB_SHUTDOWN,                // ( void );

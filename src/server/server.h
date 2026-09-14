@@ -269,6 +269,7 @@ void SV_SpeedrunUICatcher(qboolean active);
 void SV_SpeedrunReset(void);
 void SV_SpeedrunPostLoadUI(void);
 
+
 //===========================================================
 
 //
@@ -439,4 +440,6 @@ void SV_MarkGameRestarted(void);
 qboolean SV_GameRestartPending(void);
 qboolean SV_IsPostRestartSnapshot(int snapFlags);
 void SV_GameRestartSnapshotReceived(void);
+
+qboolean SV_PracticeRewind(int targetTime);
 // Hoyo ->

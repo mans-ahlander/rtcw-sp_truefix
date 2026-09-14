@@ -184,6 +184,10 @@ void trap_SpeedrunTransition(void) { // Hoyo. Added
 	syscall(G_SPEEDRUN_TRANSITION);
 }
 
+qboolean trap_PracticeRewind(int targetTime) { // Hoyo. Added
+	return syscall(G_PRACTICE_REWIND, targetTime) ? qtrue : qfalse;
+}
+
 qboolean trap_InPVS( const vec3_t p1, const vec3_t p2 ) {
 	return syscall( G_IN_PVS, p1, p2 );
 }

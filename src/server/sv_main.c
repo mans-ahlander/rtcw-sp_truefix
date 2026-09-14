@@ -882,3 +882,102 @@ qboolean SV_IsPostRestartSnapshot(int snapFlags) {
 void SV_GameRestartSnapshotReceived(void) {
 	sv_gameRestartPending = qfalse;
 }
+
+/*
+==================
+SV_PracticeRewind
+
+Rewinds server time for an in-memory practice savestate without
+restarting qagame. The game module must restore its matching state
+during the same command before normal simulation resumes.
+==================
+*/
+qboolean SV_PracticeRewind(int targetTime) {
+	int i, j;
+	client_t* cl;
+
+	if (!com_sv_running->integer || sv.state != SS_GAME) {
+		return qfalse;
+	}
+
+	if (sv_gametype->integer != GT_SINGLE_PLAYER) {
+		return qfalse;
+	}
+
+	if (targetTime < 0 || targetTime > svs.time) {
+		return qfalse;
+	}
+
+	/*
+	 * Rewind the authoritative server clock.
+	 *
+	 * Clear any fractional frame remainder so the next game frame begins
+	 * cleanly from the restored timeline.
+	 */
+	svs.time = targetTime;
+	sv.timeResidual = 0;
+	sv.restartTime = 0;
+
+	/*
+	 * Start a new logical server generation without restarting qagame.
+	 * This makes cgame discard interpolation across the rewind.
+	 */
+	svs.snapFlagServerBit ^= SNAPFLAG_SERVERCOUNT;
+
+	for (i = 0, cl = svs.clients;
+		i < sv_maxclients->integer;
+		i++, cl++) {
+
+		if (cl->state < CS_CONNECTED) {
+			continue;
+		}
+
+		/*
+		 * Notify cgame that this is a discontinuous world state.
+		 * This only performs the client-side map-restart cleanup;
+		 * it does not restart the server or VM.
+		 */
+		if (cl->netchan.remoteAddress.type != NA_BOT) {
+			SV_AddServerCommand(cl, "map_restart\n");
+		}
+
+		/*
+		 * The first post-rewind snapshot must be complete rather
+		 * than delta-compressed against the future timeline.
+		 */
+		cl->deltaMessage = -1;
+		cl->nextSnapshotTime = svs.time - 1;
+		cl->timeoutCount = 0;
+
+		/*
+		 * Clamp server-owned timestamps that may now point into
+		 * the future.
+		 */
+		if (cl->lastPacketTime > svs.time) {
+			cl->lastPacketTime = svs.time;
+		}
+
+		if (cl->lastConnectTime > svs.time) {
+			cl->lastConnectTime = svs.time;
+		}
+
+		if (cl->nextReliableTime > svs.time) {
+			cl->nextReliableTime = svs.time;
+		}
+
+		if (cl->lastUsercmd.serverTime > svs.time) {
+			cl->lastUsercmd.serverTime = svs.time;
+		}
+
+		/*
+		 * These packet timings belong to the discarded future
+		 * timeline and would otherwise produce nonsense ping values.
+		 */
+		for (j = 0; j < PACKET_BACKUP; j++) {
+			cl->frames[j].messageSent = 0;
+			cl->frames[j].messageAcked = -1;
+		}
+	}
+
+	return qtrue;
+}
