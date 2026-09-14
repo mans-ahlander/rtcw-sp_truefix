@@ -1087,12 +1087,18 @@ extern vmCvar_t g_gametype;
 extern vmCvar_t g_gameskill;
 // done
 
-// <- Hoyo, Trigger visualization and feedback
+// <- Hoyo
+// Trigger visualization and feedback
 extern vmCvar_t g_drawTriggers;
 extern vmCvar_t g_triggerFeedback;
 
 void G_InitTriggerFeedback(void);
 void G_RegisterTriggerFeedbackSound(void);
+
+// Practice savestates
+void G_ClearPracticeSaveState(void);
+void G_SavePracticeState(gentity_t* ent);
+void G_LoadPracticeState(gentity_t* ent);
 // Hoyo ->
 extern void G_ValidatePlayerCameraState(void); // Added by Hoyo
 

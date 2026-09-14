@@ -1303,6 +1303,32 @@ void Cmd_LoadPos_f(gentity_t* ent) {
 
 /*
 =================
+Cmd_SaveState_f
+=================
+*/
+void Cmd_SaveState_f(gentity_t* ent) {
+	if (!CheatsOk(ent)) {
+		return;
+	}
+
+	G_SavePracticeState(ent);
+}
+
+/*
+=================
+Cmd_LoadState_f
+=================
+*/
+void Cmd_LoadState_f(gentity_t* ent) {
+	if (!CheatsOk(ent)) {
+		return;
+	}
+
+	G_LoadPracticeState(ent);
+}
+
+/*
+=================
 Added by Hoyo
 Cmd_SetViewpos_f
 =================
@@ -2450,6 +2476,12 @@ void ClientCommand(int clientNum) {
 	}
 	else if (Q_stricmp(cmd, "loadpos") == 0) {
 		Cmd_LoadPos_f(ent);
+	}
+	else if (Q_stricmp(cmd, "savestate") == 0) {
+		Cmd_SaveState_f(ent);
+	}
+	else if (Q_stricmp(cmd, "loadstate") == 0) {
+		Cmd_LoadState_f(ent);
 	}
 	else if (Q_stricmp(cmd, "cvarcheck") == 0) {
 		Cmd_CvarCheck_f(ent);
