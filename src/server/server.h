@@ -264,6 +264,7 @@ extern speedrunState_t g_speedrunState;
 void SV_SpeedrunSetState(unsigned int flag, qboolean enabled);
 void SV_SpeedrunTransition(void);
 void SV_SpeedrunNewMap(const char* mapName);
+void SV_SpeedrunRenderReady(void);
 void SV_SpeedrunUICatcher(qboolean active);
 void SV_SpeedrunReset(void);
 void SV_SpeedrunPostLoadUI(void);
