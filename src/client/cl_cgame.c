@@ -44,6 +44,7 @@ extern qboolean SV_GetModelInfo( int clientNum, char *modelName, animModelInfo_t
 
 // <- Added by Hoyo
 extern void SV_SpeedrunPostLoadUI(void);
+extern void SV_SpeedrunRenderReady(void);
 extern qboolean SV_GameRestartPending(void);
 extern qboolean SV_IsPostRestartSnapshot(int snapFlags);
 extern void SV_GameRestartSnapshotReceived(void);
@@ -670,8 +671,23 @@ int CL_CgameSystemCalls( int *args ) {
 		re.SetFog( args[1], args[2], args[3], VMF( 4 ), VMF( 5 ), VMF( 6 ), VMF( 7 ) );
 		return 0;
 	case CG_R_RENDERSCENE:
-		re.RenderScene( VMA( 1 ) );
+	{
+		refdef_t* refdef = VMA(1);
+
+		re.RenderScene(refdef);
+
+		/*
+		 * Ignore UI/model renders and the separate skybox portal render.
+		 * We only want the actual gameplay/world camera.
+		 */
+		if (!(refdef->rdflags & RDF_NOWORLDMODEL) &&
+			!(refdef->rdflags & RDF_SKYBOXPORTAL) &&
+			(refdef->vieworg[0] != 0.0f || refdef->vieworg[1] != 0.0f || refdef->vieworg[2] != 0.0f)) {
+			SV_SpeedrunRenderReady();
+		}
+
 		return 0;
+	}
 	case CG_R_SETCOLOR:
 		re.SetColor( VMA( 1 ) );
 		return 0;

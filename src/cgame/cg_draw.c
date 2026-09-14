@@ -1161,6 +1161,101 @@ static float CG_DrawSpeed(float y) {
 	return CG_DrawBigStringScaled(y, s, scale, NULL);
 }
 
+
+/*
+==================
+CG_DrawSpeedometer
+
+Draws the independently configurable speedometer.
+
+cg_speedometerX / Y specify the center of the text in normalized
+screen coordinates from 0.0 to 1.0.
+==================
+*/
+static void CG_DrawSpeedometer(void) {
+	float vx, vy;
+	float speed;
+	float scale;
+	float centerX, centerY;
+	int charWidth, charHeight;
+	int textWidth;
+	int x, y;
+	vec4_t color;
+	qboolean shadow;
+	const char* unit;
+	char text[128];
+
+	if (!cg_speedometer.integer) {
+		return;
+	}
+
+	vx = cg.predictedPlayerState.velocity[0];
+	vy = cg.predictedPlayerState.velocity[1];
+
+	speed = sqrt(vx * vx + vy * vy);
+
+	scale = Com_Clamp(0.25f, 4.0f, cg_speedometerScale.value);
+
+	charWidth = (int)(BIGCHAR_WIDTH * scale);
+	charHeight = (int)(BIGCHAR_HEIGHT * scale);
+
+	unit = cg_speedometerShowUnit.integer ? " u/s" : "";
+
+	if (cg_speedometerLabel.string[0]) {
+		Com_sprintf(
+			text,
+			sizeof(text),
+			"%s %d%s",
+			cg_speedometerLabel.string,
+			(int)speed,
+			unit
+		);
+	}
+	else {
+		Com_sprintf(
+			text,
+			sizeof(text),
+			"%d%s",
+			(int)speed,
+			unit
+		);
+	}
+
+	color[0] = Com_Clamp(0.0f, 1.0f, cg_speedometerColorRed.value);
+	color[1] = Com_Clamp(0.0f, 1.0f, cg_speedometerColorGreen.value);
+	color[2] = Com_Clamp(0.0f, 1.0f, cg_speedometerColorBlue.value);
+	color[3] = Com_Clamp(0.0f, 1.0f, cg_speedometerColorAlpha.value);
+
+	centerX =
+		Com_Clamp(0.0f, 1.0f, cg_speedometerX.value) *
+		SCREEN_WIDTH;
+
+	centerY =
+		Com_Clamp(0.0f, 1.0f, cg_speedometerY.value) *
+		SCREEN_HEIGHT;
+
+	textWidth = CG_DrawStrlen(text) * charWidth;
+
+	x = (int)(centerX - textWidth * 0.5f);
+	y = (int)(centerY - charHeight * 0.5f);
+
+	shadow = (cg_speedometerShadow.integer != 0);
+
+	CG_DrawStringExt2(
+		x,
+		y,
+		text,
+		color,
+		qtrue,
+		shadow,
+		charWidth,
+		charHeight,
+		0,
+		ALIGN_CENTER
+	);
+}
+
+
 /*
 =================
 CG_DrawTeamOverlay
@@ -3571,6 +3666,7 @@ static void CG_Draw2D( void ) {
 
 	if ( !cg_paused.integer ) {
 		CG_DrawUpperRight();
+		CG_DrawSpeedometer();
 	}
 
 //	CG_DrawLowerRight();

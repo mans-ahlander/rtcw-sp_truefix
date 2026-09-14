@@ -125,6 +125,17 @@ vmCvar_t cg_drawHudColorGreen;
 vmCvar_t cg_drawHudColorBlue;
 vmCvar_t cg_drawHudColorAlpha;
 vmCvar_t cg_drawHudShadow;
+vmCvar_t cg_speedometer;
+vmCvar_t cg_speedometerX;
+vmCvar_t cg_speedometerY;
+vmCvar_t cg_speedometerScale;
+vmCvar_t cg_speedometerColorRed;
+vmCvar_t cg_speedometerColorGreen;
+vmCvar_t cg_speedometerColorBlue;
+vmCvar_t cg_speedometerColorAlpha;
+vmCvar_t cg_speedometerShowUnit;
+vmCvar_t cg_speedometerLabel;
+vmCvar_t cg_speedometerShadow;
 vmCvar_t cg_drawSnapshot;
 vmCvar_t cg_draw3dIcons;
 vmCvar_t cg_drawIcons;
@@ -353,7 +364,18 @@ cvarTable_t cvarTable[] = {
 	{ &cg_drawHudColorGreen, "cg_drawHudColorGreen", "1.0", CVAR_ARCHIVE },
 	{ &cg_drawHudColorBlue, "cg_drawHudColorBlue", "1.0", CVAR_ARCHIVE },
 	{ &cg_drawHudColorAlpha, "cg_drawHudColorAlpha", "1.0", CVAR_ARCHIVE },
-	{ &cg_drawHudShadow, "cg_drawHudShadow", "1", CVAR_ARCHIVE }, // Hoyo added ->
+	{ &cg_drawHudShadow, "cg_drawHudShadow", "1", CVAR_ARCHIVE }, 
+	{ &cg_speedometer, "cg_speedometer", "0", CVAR_ARCHIVE },
+	{ &cg_speedometerX, "cg_speedometerX", "0.5", CVAR_ARCHIVE },
+	{ &cg_speedometerY, "cg_speedometerY", "0.5", CVAR_ARCHIVE },
+	{ &cg_speedometerScale, "cg_speedometerScale", "1.0", CVAR_ARCHIVE },
+	{ &cg_speedometerColorRed, "cg_speedometerColorRed", "1.0", CVAR_ARCHIVE },
+	{ &cg_speedometerColorGreen, "cg_speedometerColorGreen", "1.0", CVAR_ARCHIVE },
+	{ &cg_speedometerColorBlue, "cg_speedometerColorBlue", "1.0", CVAR_ARCHIVE },
+	{ &cg_speedometerColorAlpha, "cg_speedometerColorAlpha", "1.0", CVAR_ARCHIVE },
+	{ &cg_speedometerShowUnit, "cg_speedometerShowUnit", "0", CVAR_ARCHIVE },
+	{ &cg_speedometerLabel, "cg_speedometerLabel", "", CVAR_ARCHIVE },
+	{ &cg_speedometerShadow, "cg_speedometerShadow", "1", CVAR_ARCHIVE }, // Hoyo added ->
 	{ &cg_drawSnapshot, "cg_drawSnapshot", "0", CVAR_ARCHIVE  },
 	{ &cg_draw3dIcons, "cg_draw3dIcons", "1", CVAR_ARCHIVE  },
 	{ &cg_drawIcons, "cg_drawIcons", "1", CVAR_ARCHIVE  },
