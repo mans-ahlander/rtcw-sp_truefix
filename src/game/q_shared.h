@@ -36,7 +36,8 @@ If you have questions concerning this license or the applicable additional terms
 // 1.43a is including LiveSplit features. 1.43b with added speedrunning util.
 // 1.43c is updated LiveSplit features (loadremoval) and additional crash fixes
 // 1.43d fixes crash caused by stale snapshots after restart and other stability issues.
-#define Q3_VERSION      "Wolf 1.43d"	
+// 1.43e fixes a small timing error loadremoval. Also added a highly customizable speedometer
+#define Q3_VERSION      "Wolf 1.43e"	
 // ver 1.0.0	- release
 // ver 1.0.1	- post-release work
 // ver 1.1.0	- patch 1 (12/12/01)
