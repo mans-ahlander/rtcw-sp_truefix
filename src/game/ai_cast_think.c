@@ -801,7 +801,7 @@ static int aicastLastThink;
 
 void AICast_ResetFrameTiming(int time) {
 	aicastLastTime = time;
-	aicastLastThink = time;
+	aicastLastThink = 0;
 }
 
 void AICast_StartFrame( int time ) {
