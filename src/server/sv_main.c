@@ -886,10 +886,6 @@ void SV_GameRestartSnapshotReceived(void) {
 /*
 ==================
 SV_PracticeRewind
-
-Rewinds server time for an in-memory practice savestate without
-restarting qagame. The game module must restore its matching state
-during the same command before normal simulation resumes.
 ==================
 */
 qboolean SV_PracticeRewind(int targetTime) {
@@ -919,8 +915,8 @@ qboolean SV_PracticeRewind(int targetTime) {
 	sv.restartTime = 0;
 
 	/*
-	 * Start a new logical server generation without restarting qagame.
-	 * This makes cgame discard interpolation across the rewind.
+	 * Mark a snapshot discontinuity so cgame does not interpolate
+	 * across the abandoned future timeline.
 	 */
 	svs.snapFlagServerBit ^= SNAPFLAG_SERVERCOUNT;
 

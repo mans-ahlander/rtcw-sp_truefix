@@ -1055,8 +1055,6 @@
 {"Cmd_StartCamera_f", (byte *)Cmd_StartCamera_f},
 {"Cmd_CvarCheck_f", (byte *)Cmd_CvarCheck_f},
 {"Cmd_SetViewpos_f", (byte *)Cmd_SetViewpos_f},
-{"Cmd_LoadState_f", (byte *)Cmd_LoadState_f},
-{"Cmd_SaveState_f", (byte *)Cmd_SaveState_f},
 {"Cmd_LoadPos_f", (byte *)Cmd_LoadPos_f},
 {"Cmd_SavePos_f", (byte *)Cmd_SavePos_f},
 {"G_canPickupMelee", (byte *)G_canPickupMelee},

@@ -71,6 +71,22 @@ qboolean G_SavePracticeState(gentity_t* ent) {
 	int castCount;
 	int i;
 
+	if (!g_cheats.integer) {
+		trap_SendServerCommand(
+			ent - g_entities,
+			"print \"Cheats are not enabled on this server.\n\""
+		);
+		return qfalse;
+	}
+
+	if (ent->health <= 0) {
+		trap_SendServerCommand(
+			ent - g_entities,
+			"print \"You must be alive to create a savestate.\n\""
+		);
+		return qfalse;
+	}
+
 	if (g_gametype.integer != GT_SINGLE_PLAYER) {
 		trap_SendServerCommand(
 			ent - g_entities,
@@ -106,8 +122,7 @@ qboolean G_SavePracticeState(gentity_t* ent) {
 	}
 
 	/*
-	 * Mark invalid while writing so a partially populated snapshot can
-	 * never be restored.
+	 * Mark invalid while writing so a partially populated snapshot can never be restored.
 	 */
 	practiceSaveState.valid = qfalse;
 
@@ -192,15 +207,20 @@ qboolean G_SavePracticeState(gentity_t* ent) {
 /*
 ==================
 G_LoadPracticeState
-
-Initial implementation only validates the stored snapshot.
-Actual restoration is added separately.
 ==================
 */
 qboolean G_LoadPracticeState(gentity_t* ent) {
 	int i;
 	int restoreCount;
 	int currentNumEntities;
+
+	if (!g_cheats.integer) {
+		trap_SendServerCommand(
+			ent - g_entities,
+			"print \"Cheats are not enabled on this server.\n\""
+		);
+		return qfalse;
+	}
 
 	if (!practiceSaveState.valid) {
 		trap_SendServerCommand(
@@ -314,8 +334,6 @@ qboolean G_LoadPracticeState(gentity_t* ent) {
 	}
 
 	numcast = practiceSaveState.numCast;
-
-	level = practiceSaveState.level;
 
 	G_SetWolfKickTimer(
 		practiceSaveState.wolfKickTimer

@@ -1348,10 +1348,12 @@ void ClientThink_real( gentity_t *ent ) {
 	ent->s.animMovetype = BG_GetConditionValue( ent->s.number, ANIM_COND_MOVETYPE, qtrue );
 
 	// Rafael Kick
-	if ( ucmd->wolfkick && ent->health > 0 ) {
-		validkick = Cmd_WolfKick_f( ent );
+	if (ucmd->wolfkick && ent->health > 0 &&
+		wolfkicktimer <= level.time) { // Modifed by Hoyo for stateloading
 
-		if ( validkick ) {
+		validkick = Cmd_WolfKick_f(ent);
+
+		if (validkick) {
 			wolfkicktimer = level.time + 1000;
 		}
 	}
