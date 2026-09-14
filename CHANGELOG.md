@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.43e
+
+### Added
+
+* Added an independently configurable speedometer HUD.
+  * Position can be configured using normalized X/Y coordinates.
+  * Added configurable scale, color, alpha, shadow, label, and unit display.
+  * The new speedometer is independent from the existing upper-right speed, timer, and FPS display.
+
+### Changed
+
+* Improved speedrun load-removal telemetry so full map loads remain excluded from timing until the first valid gameplay view reaches the renderer.
+  * Removes the need for LiveSplit to directly inspect cgame camera-position memory.
+  * Post-load briefing handling remains authoritative when a briefing screen is present.
+
 ## 1.43d
 
 ### Changed
