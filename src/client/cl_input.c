@@ -33,20 +33,30 @@ If you have questions concerning this license or the applicable additional terms
 unsigned frame_msec;
 int old_com_frameTime;
 
+
+// ========================================================================== =
+//  SAVESTATE/LOADSTATE Functions
+// ========================================================================== =
+
 typedef struct {
 	qboolean valid;
 
-	/*
-	 * Stored newest-to-oldest. We intentionally do not save
-	 * cl.cmdNumber, because it belongs to the live connection.
-	 */
 	usercmd_t cmds[CMD_BACKUP];
 
 	vec3_t viewangles;
+
+	/*
+	 * Client-side simulation time at the checkpoint.
+	 * This is gameplay/prediction state, not network sequence state.
+	 */
+	int serverTime;
 } practiceClientInputState_t;
 
 static practiceClientInputState_t practiceClientInputState;
 
+/*
+CL_SavePracticeInputState
+*/
 void CL_SavePracticeInputState(void) {
 	int i;
 
@@ -60,19 +70,25 @@ void CL_SavePracticeInputState(void) {
 		practiceClientInputState.viewangles
 	);
 
+	practiceClientInputState.serverTime = cl.serverTime;
+
 	practiceClientInputState.valid = qtrue;
 }
 
+/*
+CL_RestorePracticeInputState
+*/
 qboolean CL_RestorePracticeInputState(void) {
 	int i;
+	int tn;
 
 	if (!practiceClientInputState.valid) {
 		return qfalse;
 	}
 
 	/*
-	 * Restore the saved commands relative to the CURRENT command
-	 * number. The logical command sequence remains monotonic.
+	 * Restore saved command contents relative to the current logical
+	 * command number. Network command numbering remains monotonic.
 	 */
 	for (i = 0; i < CMD_BACKUP; i++) {
 		cl.cmds[(cl.cmdNumber - i) & CMD_MASK] =
@@ -83,6 +99,30 @@ qboolean CL_RestorePracticeInputState(void) {
 		practiceClientInputState.viewangles,
 		cl.viewangles
 	);
+
+	/*
+	 * CL_SendCmd() executes before CL_SetCGameTime(). Rewind the
+	 * client simulation clock here so the first newly generated
+	 * command cannot retain a timestamp from the abandoned timeline.
+	 */
+	tn = cl_timeNudge->integer;
+
+	if (tn < -30) {
+		tn = -30;
+	}
+	else if (tn > 30) {
+		tn = 30;
+	}
+
+	cl.serverTime = practiceClientInputState.serverTime;
+	cl.oldServerTime = practiceClientInputState.serverTime;
+
+	cl.serverTimeDelta =
+		practiceClientInputState.serverTime -
+		cls.realtime +
+		tn;
+
+	cl.extrapolatedSnapshot = qfalse;
 
 	return qtrue;
 }
