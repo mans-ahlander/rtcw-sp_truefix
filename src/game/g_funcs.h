@@ -1152,6 +1152,8 @@
 {"P_DamageFeedback", (byte *)P_DamageFeedback},
 {"G_RegisterTriggerFeedbackSound", (byte *)G_RegisterTriggerFeedbackSound},
 {"G_InitTriggerFeedback", (byte *)G_InitTriggerFeedback},
+{"G_SetWolfKickTimer", (byte *)G_SetWolfKickTimer},
+{"G_GetWolfKickTimer", (byte *)G_GetWolfKickTimer},
 {"PM_StepSlideMove", (byte *)PM_StepSlideMove},
 {"PM_SlideMove", (byte *)PM_SlideMove},
 {"PM_AdjustAimSpreadScale", (byte *)PM_AdjustAimSpreadScale},

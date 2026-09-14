@@ -37,6 +37,13 @@ typedef struct {
 	bot_state_t botStates[MAX_CLIENTS];
 
 	gentity_t* camEnt;
+
+	int wolfKickTimer;
+
+	/* Runtime state outside the main level/entity arrays. */
+	int gReloading;
+	qboolean saveGamePending;
+	char screenFade[MAX_STRING_CHARS];
 } practiceSaveState_t;
 
 static practiceSaveState_t practiceSaveState;
@@ -60,7 +67,7 @@ void G_ClearPracticeSaveState(void) {
 G_SavePracticeState
 ==================
 */
-void G_SavePracticeState(gentity_t* ent) {
+qboolean G_SavePracticeState(gentity_t* ent) {
 	int castCount;
 	int i;
 
@@ -69,7 +76,7 @@ void G_SavePracticeState(gentity_t* ent) {
 			ent - g_entities,
 			"print \"savestate is only available in single-player.\n\""
 		);
-		return;
+		return qfalse;
 	}
 
 	if (level.num_entities < 0 ||
@@ -78,7 +85,7 @@ void G_SavePracticeState(gentity_t* ent) {
 			ent - g_entities,
 			"print \"Unable to create savestate: invalid entity count.\n\""
 		);
-		return;
+		return qfalse;
 	}
 
 	if (!caststates) {
@@ -86,7 +93,7 @@ void G_SavePracticeState(gentity_t* ent) {
 			ent - g_entities,
 			"print \"Unable to create savestate: AI state is unavailable.\n\""
 		);
-		return;
+		return qfalse;
 	}
 
 	if (aicast_maxclients < 0 ||
@@ -95,7 +102,7 @@ void G_SavePracticeState(gentity_t* ent) {
 			ent - g_entities,
 			"print \"Unable to create savestate: invalid AI client count.\n\""
 		);
-		return;
+		return qfalse;
 	}
 
 	/*
@@ -153,7 +160,18 @@ void G_SavePracticeState(gentity_t* ent) {
 		}
 	}
 
+	practiceSaveState.wolfKickTimer = G_GetWolfKickTimer();
+
 	G_SanitizePracticeSaveState();
+
+	practiceSaveState.gReloading = g_reloading.integer;
+	practiceSaveState.saveGamePending = saveGamePending;
+
+	trap_GetConfigstring(
+		CS_SCREENFADE,
+		practiceSaveState.screenFade,
+		sizeof(practiceSaveState.screenFade)
+	);
 
 	practiceSaveState.valid = qtrue;
 
@@ -166,6 +184,8 @@ void G_SavePracticeState(gentity_t* ent) {
 			practiceSaveState.numCast
 		)
 	);
+
+	return qtrue;
 }
 
 
@@ -177,7 +197,7 @@ Initial implementation only validates the stored snapshot.
 Actual restoration is added separately.
 ==================
 */
-void G_LoadPracticeState(gentity_t* ent) {
+qboolean G_LoadPracticeState(gentity_t* ent) {
 	int i;
 	int restoreCount;
 	int currentNumEntities;
@@ -187,7 +207,7 @@ void G_LoadPracticeState(gentity_t* ent) {
 			ent - g_entities,
 			"print \"No savestate has been created.\n\""
 		);
-		return;
+		return qfalse;
 	}
 
 	if (practiceSaveState.numEntities < 0 ||
@@ -197,7 +217,7 @@ void G_LoadPracticeState(gentity_t* ent) {
 			ent - g_entities,
 			"print \"Savestate is invalid: bad entity count.\n\""
 		);
-		return;
+		return qfalse;
 	}
 
 	if (!G_PracticeStateAICompatible()) {
@@ -205,7 +225,7 @@ void G_LoadPracticeState(gentity_t* ent) {
 			ent - g_entities,
 			"print \"Savestate cannot be restored: AI client layout changed.\n\""
 		);
-		return;
+		return qfalse;
 	}
 
 	currentNumEntities = level.num_entities;
@@ -229,7 +249,7 @@ void G_LoadPracticeState(gentity_t* ent) {
 			ent - g_entities,
 			"print \"Unable to rewind server for savestate.\n\""
 		);
-		return;
+		return qfalse;
 	}
 
 	/*
@@ -295,6 +315,39 @@ void G_LoadPracticeState(gentity_t* ent) {
 
 	numcast = practiceSaveState.numCast;
 
+	level = practiceSaveState.level;
+
+	G_SetWolfKickTimer(
+		practiceSaveState.wolfKickTimer
+	);
+
+	/*
+	 * Restore runtime state that lives outside level/gentity/gclient.
+	 */
+	saveGamePending = practiceSaveState.saveGamePending;
+
+	trap_Cvar_Set(
+		"g_reloading",
+		va("%i", practiceSaveState.gReloading)
+	);
+	trap_Cvar_Update(&g_reloading);
+
+	/*
+	* Restore the checkpoint's screen fade state. This also cancels a
+	* pending death fade when the checkpoint was normal gameplay.
+	*/
+	trap_SetConfigstring(
+		CS_SCREENFADE,
+		practiceSaveState.screenFade
+	);
+
+	if (!practiceSaveState.gReloading) {
+		trap_SendServerCommand(
+			0,
+			"snd_fade 1 0"
+		);
+	}
+
 	/*
 	 * Restore the global script-camera pointer and repair any impossible
 	 * camera combination.
@@ -317,6 +370,8 @@ void G_LoadPracticeState(gentity_t* ent) {
 			numcast
 		)
 	);
+
+	return qtrue;
 }
 
 static qboolean G_PracticeStateAICompatible(void) {

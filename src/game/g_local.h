@@ -1098,8 +1098,11 @@ void G_RegisterTriggerFeedbackSound(void);
 
 // Practice savestates
 void G_ClearPracticeSaveState(void);
-void G_SavePracticeState(gentity_t* ent);
-void G_LoadPracticeState(gentity_t* ent);
+qboolean G_SavePracticeState(gentity_t* ent);
+qboolean G_LoadPracticeState(gentity_t* ent);
+// Hoyo - practice savestate
+int G_GetWolfKickTimer(void);
+void G_SetWolfKickTimer(int time);
 // Hoyo ->
 extern void G_ValidatePlayerCameraState(void); // Added by Hoyo
 

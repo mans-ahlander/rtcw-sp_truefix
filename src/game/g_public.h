@@ -474,7 +474,11 @@ typedef enum {
 	// done.
 
 	GAME_RETRIEVE_MOVESPEEDS_FROM_CLIENT,
-	GAME_GETMODELINFO
+	GAME_GETMODELINFO,
+
+	// Hoyo - local practice savestate
+	GAME_PRACTICE_SAVE,
+	GAME_PRACTICE_LOAD
 
 } gameExport_t;
 

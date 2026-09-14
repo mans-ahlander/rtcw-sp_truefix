@@ -38,6 +38,88 @@ These commands can only be entered from stdin or by a remote operator datagram
 ===============================================================================
 */
 
+
+static qboolean sv_practiceInputValid = qfalse;
+static usercmd_t sv_practiceLastUsercmd;
+static qboolean SV_PracticeCommandReady(void) {
+	if (!com_sv_running ||
+		!com_sv_running->integer ||
+		sv.state != SS_GAME ||
+		!gvm) {
+		Com_Printf("Practice savestate is only available during an active game.\n");
+		return qfalse;
+	}
+
+	if (sv_gametype->integer != GT_SINGLE_PLAYER) {
+		Com_Printf("Practice savestate is only available in single-player.\n");
+		return qfalse;
+	}
+
+	if (sv_maxclients->integer < 1 ||
+		svs.clients[0].state != CS_ACTIVE) {
+		Com_Printf("No active player is available for practice savestate.\n");
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+static void SV_SaveState_f(void) {
+	if (!SV_PracticeCommandReady()) {
+		return;
+	}
+
+	if (!VM_Call(gvm, GAME_PRACTICE_SAVE, 0)) {
+		return;
+	}
+
+	CL_SavePracticeInputState();
+
+	sv_practiceLastUsercmd =
+		svs.clients[0].lastUsercmd;
+
+	if (!CL_SavePracticeCgameState()) {
+		sv_practiceInputValid = qfalse;
+
+		Com_Printf(
+			"Unable to save practice cgame state.\n"
+		);
+		return;
+	}
+
+	sv_practiceInputValid = qtrue;
+}
+
+static void SV_LoadState_f(void) {
+	if (!SV_PracticeCommandReady()) {
+		return;
+	}
+
+	if (!sv_practiceInputValid) {
+		Com_Printf("No complete practice savestate is available.\n");
+		return;
+	}
+
+	if (!VM_Call(gvm, GAME_PRACTICE_LOAD, 0)) {
+		return;
+	}
+
+	svs.clients[0].lastUsercmd =
+		sv_practiceLastUsercmd;
+
+	if (!CL_RestorePracticeInputState()) {
+		Com_Printf(
+			"WARNING: unable to restore practice input state.\n"
+		);
+	}
+
+	if (!CL_RestorePracticeCgameState()) {
+		Com_Printf(
+			"WARNING: unable to restore practice cgame state.\n"
+		);
+	}
+}
+
 /*
 ==================
 SV_GetPlayerByName
@@ -950,6 +1032,8 @@ void SV_AddOperatorCommands( void ) {
 	if ( com_dedicated->integer ) {
 		Cmd_AddCommand( "say", SV_ConSay_f );
 	}
+	Cmd_AddCommand("savestate", SV_SaveState_f);
+	Cmd_AddCommand("loadstate", SV_LoadState_f);
 }
 
 /*

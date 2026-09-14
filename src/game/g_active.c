@@ -41,6 +41,17 @@ static qboolean triggerWasTouched[MAX_GENTITIES];
 static qboolean triggerTouchedThisFrame[MAX_GENTITIES];
 static int triggerFeedbackSound;
 
+// Hoyo - practice savestate
+static int wolfkicktimer = 0;
+
+int G_GetWolfKickTimer(void) {
+	return wolfkicktimer;
+}
+
+void G_SetWolfKickTimer(int time) {
+	wolfkicktimer = time;
+}
+
 void G_InitTriggerFeedback(void) {
 	memset(triggerWasTouched, 0, sizeof(triggerWasTouched));
 	memset(triggerTouchedThisFrame, 0, sizeof(triggerTouchedThisFrame));
@@ -880,7 +891,6 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// Rafael wolfkick
 	int validkick;
-	static int wolfkicktimer = 0;
 
 	client = ent->client;
 

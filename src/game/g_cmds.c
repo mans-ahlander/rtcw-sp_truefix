@@ -1320,7 +1320,11 @@ Cmd_LoadState_f
 =================
 */
 void Cmd_LoadState_f(gentity_t* ent) {
-	if (!CheatsOk(ent)) {
+	if (!g_cheats.integer) {
+		trap_SendServerCommand(
+			ent - g_entities,
+			"print \"Cheats are not enabled on this server.\n\""
+		);
 		return;
 	}
 

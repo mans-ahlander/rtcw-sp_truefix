@@ -1340,3 +1340,32 @@ qboolean CL_GetTag( int clientNum, char *tagname, orientation_t *or ) {
 
 	return VM_Call( cgvm, CG_GET_TAG, clientNum, tagname, or );
 }
+
+
+/*
+====================
+CL_SavePracticeCgameState
+Hoyo
+====================
+*/
+qboolean CL_SavePracticeCgameState(void) {
+	if (!cgvm) {
+		return qfalse;
+	}
+
+	return VM_Call(cgvm, CG_PRACTICE_SAVE) ? qtrue : qfalse;
+}
+
+/*
+====================
+CL_RestorePracticeCgameState
+Hoyo
+====================
+*/
+qboolean CL_RestorePracticeCgameState(void) {
+	if (!cgvm) {
+		return qfalse;
+	}
+
+	return VM_Call(cgvm, CG_PRACTICE_LOAD) ? qtrue : qfalse;
+}

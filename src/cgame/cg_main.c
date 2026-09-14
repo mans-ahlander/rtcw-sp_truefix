@@ -82,6 +82,10 @@ int vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int a
 		return CG_CrosshairPlayer();
 	case CG_LAST_ATTACKER:
 		return CG_LastAttacker();
+	case CG_PRACTICE_SAVE:
+		return CG_SavePracticeState();
+	case CG_PRACTICE_LOAD:
+		return CG_LoadPracticeState();
 	case CG_KEY_EVENT:
 		CG_KeyEvent( arg0, arg1 );
 		return 0;
@@ -97,6 +101,23 @@ int vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int a
 	return -1;
 }
 
+
+typedef struct {
+	qboolean valid;
+
+	viewDamage_t viewDamage[MAX_VIEWDAMAGE];
+
+	float damageTime;
+	int damageIndex;
+
+	float v_dmg_time;
+	float v_dmg_pitch;
+	float v_dmg_roll;
+
+	int attackerTime;
+} practiceCgameState_t;
+
+static practiceCgameState_t practiceCgameState;
 
 cg_t cg;
 cgs_t cgs;
@@ -2520,4 +2541,106 @@ void CG_Shutdown( void ) {
 	// like closing files or archiving session data
 }
 
+/*
+=================
+CG_SavePracticeState
+
+Hoyo
+=================
+*/
+qboolean CG_SavePracticeState(void) {
+	memcpy(
+		practiceCgameState.viewDamage,
+		cg.viewDamage,
+		sizeof(practiceCgameState.viewDamage)
+	);
+
+	practiceCgameState.damageTime = cg.damageTime;
+	practiceCgameState.damageIndex = cg.damageIndex;
+
+	practiceCgameState.v_dmg_time = cg.v_dmg_time;
+	practiceCgameState.v_dmg_pitch = cg.v_dmg_pitch;
+	practiceCgameState.v_dmg_roll = cg.v_dmg_roll;
+
+	practiceCgameState.attackerTime = cg.attackerTime;
+
+	practiceCgameState.valid = qtrue;
+
+	return qtrue;
+}
+
+
+/*
+=================
+CG_ClearPracticeTransientEffects
+
+Hoyo
+=================
+*/
+static void CG_ClearPracticeTransientEffects(void) {
+	int i;
+
+	/*
+	 * Discard all locally generated effects from the abandoned timeline.
+	 *
+	 * We intentionally do not restore these. They are presentation-only
+	 * and can be regenerated naturally from the restored world state.
+	 */
+
+	CG_InitLocalEntities();
+	CG_InitMarkPolys();
+
+	CG_ClearParticles();
+
+	/*
+	 * CG_ClearParticles() also removes persistent map particle areas
+	 * such as snow/weather, so recreate those from the unchanged
+	 * configstrings.
+	 */
+	for (i = 1; i < MAX_PARTICLES_AREAS; i++) {
+		if (!CG_NewParticleArea(CS_PARTICLES + i)) {
+			break;
+		}
+	}
+
+	CG_ClearTrails();
+
+	/*
+	 * Renderer-side zombie effects live outside normal cgame pools.
+	 * -1 is already used by RTCW as the reset operation.
+	 */
+	trap_RB_ZombieFXAddNewHit(-1, NULL, NULL);
+}
+
+/*
+=================
+CG_LoadPracticeState
+
+Hoyo
+=================
+*/
+qboolean CG_LoadPracticeState(void) {
+	if (!practiceCgameState.valid) {
+		return qfalse;
+	}
+
+	memcpy(
+		cg.viewDamage,
+		practiceCgameState.viewDamage,
+		sizeof(cg.viewDamage)
+	);
+
+	cg.damageTime = practiceCgameState.damageTime;
+	cg.damageIndex = practiceCgameState.damageIndex;
+
+	cg.v_dmg_time = practiceCgameState.v_dmg_time;
+	cg.v_dmg_pitch = practiceCgameState.v_dmg_pitch;
+	cg.v_dmg_roll = practiceCgameState.v_dmg_roll;
+
+	cg.attackerTime = practiceCgameState.attackerTime;
+
+	CG_ClearPracticeTransientEffects();
+
+	return qtrue;
+}
 

@@ -933,15 +933,6 @@ qboolean SV_PracticeRewind(int targetTime) {
 		}
 
 		/*
-		 * Notify cgame that this is a discontinuous world state.
-		 * This only performs the client-side map-restart cleanup;
-		 * it does not restart the server or VM.
-		 */
-		if (cl->netchan.remoteAddress.type != NA_BOT) {
-			SV_AddServerCommand(cl, "map_restart\n");
-		}
-
-		/*
 		 * The first post-rewind snapshot must be complete rather
 		 * than delta-compressed against the future timeline.
 		 */

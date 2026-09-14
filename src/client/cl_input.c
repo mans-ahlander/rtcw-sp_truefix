@@ -33,6 +33,60 @@ If you have questions concerning this license or the applicable additional terms
 unsigned frame_msec;
 int old_com_frameTime;
 
+typedef struct {
+	qboolean valid;
+
+	/*
+	 * Stored newest-to-oldest. We intentionally do not save
+	 * cl.cmdNumber, because it belongs to the live connection.
+	 */
+	usercmd_t cmds[CMD_BACKUP];
+
+	vec3_t viewangles;
+} practiceClientInputState_t;
+
+static practiceClientInputState_t practiceClientInputState;
+
+void CL_SavePracticeInputState(void) {
+	int i;
+
+	for (i = 0; i < CMD_BACKUP; i++) {
+		practiceClientInputState.cmds[i] =
+			cl.cmds[(cl.cmdNumber - i) & CMD_MASK];
+	}
+
+	VectorCopy(
+		cl.viewangles,
+		practiceClientInputState.viewangles
+	);
+
+	practiceClientInputState.valid = qtrue;
+}
+
+qboolean CL_RestorePracticeInputState(void) {
+	int i;
+
+	if (!practiceClientInputState.valid) {
+		return qfalse;
+	}
+
+	/*
+	 * Restore the saved commands relative to the CURRENT command
+	 * number. The logical command sequence remains monotonic.
+	 */
+	for (i = 0; i < CMD_BACKUP; i++) {
+		cl.cmds[(cl.cmdNumber - i) & CMD_MASK] =
+			practiceClientInputState.cmds[i];
+	}
+
+	VectorCopy(
+		practiceClientInputState.viewangles,
+		cl.viewangles
+	);
+
+	return qtrue;
+}
+
 /*
 ===============================================================================
 
