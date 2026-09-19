@@ -115,6 +115,9 @@ typedef struct {
 	float v_dmg_roll;
 
 	int attackerTime;
+
+	int weaponSelect;
+	int weaponSelectTime;
 } practiceCgameState_t;
 
 static practiceCgameState_t practiceCgameState;
@@ -2564,6 +2567,9 @@ qboolean CG_SavePracticeState(void) {
 
 	practiceCgameState.attackerTime = cg.attackerTime;
 
+	practiceCgameState.weaponSelect = cg.weaponSelect;
+	practiceCgameState.weaponSelectTime = cg.weaponSelectTime;
+
 	practiceCgameState.valid = qtrue;
 
 	return qtrue;
@@ -2638,6 +2644,9 @@ qboolean CG_LoadPracticeState(void) {
 	cg.v_dmg_roll = practiceCgameState.v_dmg_roll;
 
 	cg.attackerTime = practiceCgameState.attackerTime;
+
+	cg.weaponSelect = practiceCgameState.weaponSelect;
+	cg.weaponSelectTime = practiceCgameState.weaponSelectTime;	
 
 	CG_ClearPracticeTransientEffects();
 
