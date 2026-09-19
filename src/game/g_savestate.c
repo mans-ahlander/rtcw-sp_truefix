@@ -193,7 +193,7 @@ qboolean G_SavePracticeState(gentity_t* ent) {
 	trap_SendServerCommand(
 		ent - g_entities,
 		va(
-			"print \"Savestate created: time %i, entities %i, cast %i.\n\"",
+			"print \"Savestate created\n\"",
 			practiceSaveState.level.time,
 			practiceSaveState.numEntities,
 			practiceSaveState.numCast
@@ -382,7 +382,7 @@ qboolean G_LoadPracticeState(gentity_t* ent) {
 	trap_SendServerCommand(
 		0,
 		va(
-			"print \"Savestate restored: time %i, entities %i, cast %i.\n\"",
+			"print \"Savestate restored\n\"",
 			level.time,
 			level.num_entities,
 			numcast
