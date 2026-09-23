@@ -10,6 +10,11 @@ Gameplay-affecting changes are intentionally avoided, even when the original beh
 
 TrueFix also includes a small number of features intended specifically for RTCW speedrunning. This includes built-in speedrun telemetry designed to provide a stable interface for LiveSplit ASL autosplitters, allowing timing logic such as level transitions and load removal to be handled directly from authoritative game state rather than inferred from unrelated memory values.
 
+Additional information:
+
+- [Command & Feature Manual](docs/commands.md)
+- [Changelog](docs/CHANGELOG.md)
+
 ## Based on
 
 TrueFix is based on the Return to Castle Wolfenstein single-player GPL source release by id Software.
