@@ -473,7 +473,8 @@ int SV_GameSystemCalls( int *args ) {
 	case G_SPEEDRUN_TRANSITION: // Hoyo added
 		SV_SpeedrunTransition();
 		return 0;
-
+	case G_PRACTICE_REWIND: // Hoyo added
+		return SV_PracticeRewind(args[1]);
 		//====================================
 
 	case BOTLIB_SETUP:

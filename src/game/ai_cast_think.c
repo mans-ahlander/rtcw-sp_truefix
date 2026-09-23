@@ -796,11 +796,18 @@ AICast_StartFrame
 */
 void CopyToBodyQue( gentity_t *ent );
 
+static int aicastLastTime;
+static int aicastLastThink;
+
+void AICast_ResetFrameTiming(int time) {
+	aicastLastTime = time;
+	aicastLastThink = 0;
+}
+
 void AICast_StartFrame( int time ) {
 	int i, elapsed, count, clCount;
 	cast_state_t    *cs;
 	int castcount;
-	static int lasttime, lastthink;
 	static vmCvar_t aicast_disable;
 	gentity_t *ent;
 
@@ -840,7 +847,7 @@ void AICast_StartFrame( int time ) {
 	trap_BotLibStartFrame( (float) time / 1000 );
 	//
 	//
-	elapsed = time - lasttime;
+	elapsed = time - aicastLastTime;
 	if ( elapsed == 0 ) {
 		return;         // no time has elapsed
 	}
@@ -849,7 +856,7 @@ void AICast_StartFrame( int time ) {
 
 	if ( elapsed < 0 ) {
 		elapsed = 0;
-		lasttime = time;
+		aicastLastTime = time;
 	}
 	// don't let the SIGHTING framerate drop below 10 (too much sighting to process at once)
 	if ( elapsed > 100 ) {
@@ -871,11 +878,11 @@ void AICast_StartFrame( int time ) {
 	castcount = 0;
 	clCount = 0;
 	//
-	if ( ++lastthink > level.maxclients ) {
-		lastthink = 0;
+	if ( ++aicastLastThink > level.maxclients ) {
+		aicastLastThink = 0;
 	}
 	//update the AI characters
-	for ( i = lastthink, ent = &g_entities[lastthink]; clCount < level.numPlayingClients && count < aicast_maxthink; i++, ent++ )
+	for ( i = aicastLastThink, ent = &g_entities[aicastLastThink]; clCount < level.numPlayingClients && count < aicast_maxthink; i++, ent++ )
 	{
 		if ( i >= level.maxclients ) {
 			// rewind back to the start
@@ -883,7 +890,7 @@ void AICast_StartFrame( int time ) {
 			ent = g_entities;
 		}
 		//
-		lastthink = i;
+		aicastLastThink = i;
 		if ( !ent->inuse ) {
 			continue;
 		}
@@ -936,7 +943,7 @@ void AICast_StartFrame( int time ) {
 		}
 	}
 	//
-	lasttime = time;
+	aicastLastTime = time;
 }
 
 /*

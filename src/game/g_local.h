@@ -1077,6 +1077,7 @@ void Props_Chair_Skyboxtouch( gentity_t *ent );
 
 extern level_locals_t level;
 extern gentity_t g_entities[MAX_GENTITIES];
+extern gclient_t g_clients[MAX_CLIENTS];
 extern gentity_t       *g_camEnt;
 
 #define FOFS( x ) ( (int)&( ( (gentity_t *)0 )->x ) )
@@ -1087,12 +1088,21 @@ extern vmCvar_t g_gametype;
 extern vmCvar_t g_gameskill;
 // done
 
-// <- Hoyo, Trigger visualization and feedback
+// <- Hoyo
+// Trigger visualization and feedback
 extern vmCvar_t g_drawTriggers;
 extern vmCvar_t g_triggerFeedback;
 
 void G_InitTriggerFeedback(void);
 void G_RegisterTriggerFeedbackSound(void);
+
+// Practice savestates
+void G_ClearPracticeSaveState(void);
+qboolean G_SavePracticeState(gentity_t* ent);
+qboolean G_LoadPracticeState(gentity_t* ent);
+// Hoyo - practice savestate
+int G_GetWolfKickTimer(void);
+void G_SetWolfKickTimer(int time);
 // Hoyo ->
 extern void G_ValidatePlayerCameraState(void); // Added by Hoyo
 
@@ -1389,6 +1399,8 @@ void    trap_BotResetWeaponState( int weaponstate );
 int     trap_GeneticParentsAndChildSelection( int numranks, float *ranks, int *parent1, int *parent2, int *child );
 
 void    trap_SnapVector( float *v );
+
+qboolean trap_PracticeRewind(int targetTime); // Hoyo
 
 typedef enum
 {

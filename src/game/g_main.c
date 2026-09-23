@@ -477,6 +477,17 @@ int vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int a
 		return 0;
 	case GAME_GETMODELINFO:
 		return G_GetModelInfo( arg0, (char *)arg1, (animModelInfo_t **)arg2 );
+	case GAME_PRACTICE_SAVE:
+		if (arg0 < 0 || arg0 >= level.maxclients) {
+			return qfalse;
+		}
+		return G_SavePracticeState(&g_entities[arg0]);
+
+	case GAME_PRACTICE_LOAD:
+		if (arg0 < 0 || arg0 >= level.maxclients) {
+			return qfalse;
+		}
+		return G_LoadPracticeState(&g_entities[arg0]);
 	}
 
 	return -1;
@@ -1357,6 +1368,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	G_ProcessIPBans();
 
 	G_InitMemory();
+
+	// Hoyo - practice savestate
+	G_ClearPracticeSaveState();
 
 	// Hoyo. Reset speedrun state
 	trap_SpeedrunState(SR_STATE_LEVEL_TRANSITION, qfalse);

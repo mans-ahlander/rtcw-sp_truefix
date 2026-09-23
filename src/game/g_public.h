@@ -250,6 +250,7 @@ typedef enum {
 
 	G_SPEEDRUN_STATE, // Hoyo added
 	G_SPEEDRUN_TRANSITION, // Hoyo added
+	G_PRACTICE_REWIND, // Hoyo added
 
 	BOTLIB_SETUP = 200,             // ( void );
 	BOTLIB_SHUTDOWN,                // ( void );
@@ -473,7 +474,11 @@ typedef enum {
 	// done.
 
 	GAME_RETRIEVE_MOVESPEEDS_FROM_CLIENT,
-	GAME_GETMODELINFO
+	GAME_GETMODELINFO,
+
+	// Hoyo - local practice savestate
+	GAME_PRACTICE_SAVE,
+	GAME_PRACTICE_LOAD
 
 } gameExport_t;
 

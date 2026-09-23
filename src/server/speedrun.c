@@ -9,6 +9,8 @@
 	#define SR_DEBUG(...) ((void)0)
 #endif
 
+extern cvar_t* cvar_cheats;
+
 // Hoyo - stable external interface for speedrun timers
 speedrunState_t g_speedrunState = {
 	SPEEDRUN_STATE_MAGIC,
@@ -135,6 +137,7 @@ void SV_SpeedrunSetState(unsigned int flag, qboolean enabled) {
 	}
 }
 
+
 void SV_SpeedrunTransition(void) {
 	g_speedrunState.transitionSequence++;
 
@@ -193,6 +196,10 @@ void SV_SpeedrunRenderReady(void) {
 	}
 
 	speedrunRenderPending = qfalse;
+
+	if (cvar_cheats->integer) {
+		Com_Printf("^1sv_cheats is enabled\n");
+	}
 
 	SR_DEBUG(
 		"SPEEDRUN: RENDER READY map=%s "
@@ -256,6 +263,7 @@ void SV_SpeedrunUICatcher(qboolean active) {
 	SV_SpeedrunUpdateLoadRemoval();
 }
 
+
 void SV_SpeedrunReset(void) {
 	speedrunPostLoadUIPending = qfalse;
 	speedrunWatchUICatcher = qfalse;
@@ -273,6 +281,7 @@ void SV_SpeedrunReset(void) {
 		g_speedrunState.transitionSequence
 	);
 }
+
 
 /*
  * The loading cgame has opened the post-load briefing UI.

@@ -891,6 +891,13 @@ qboolean SV_GameCommand( void );
 qboolean UI_GameCommand( void );
 qboolean UI_usesUniqueCDKey();
 
+// Hoyo - practice savestate
+void CL_SavePracticeInputState(void);
+qboolean CL_RestorePracticeInputState(void);
+
+qboolean CL_SavePracticeCgameState(void);
+qboolean CL_RestorePracticeCgameState(void);
+
 /*
 ==============================================================
 

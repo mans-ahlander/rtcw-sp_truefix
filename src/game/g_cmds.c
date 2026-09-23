@@ -1280,7 +1280,12 @@ void Cmd_LoadPos_f(gentity_t* ent) {
 		return;
 	}
 
-	if (loadPosTime && level.time < loadPosTime + LOADPOS_COOLDOWN) {
+	if (loadPosTime > level.time) {
+		loadPosTime = level.time - LOADPOS_COOLDOWN;
+	}
+
+	if (loadPosTime &&
+		level.time < loadPosTime + LOADPOS_COOLDOWN) {
 		return;
 	}
 
@@ -1845,8 +1850,6 @@ int Cmd_WolfKick_f(gentity_t* ent) {
 	gentity_t* traceEnt;
 	vec3_t forward, right, up, offset;
 	gentity_t* tent;
-	static int oldkicktime = 0;
-	int kicktime = level.time;
 	qboolean solidKick = qfalse;    // don't play "hit" sound on a trigger unless it's an func_invisible_user
 
 	int damage = sk_plr_dmg_kick.integer;	// Knightmare- was	15
@@ -1854,12 +1857,6 @@ int Cmd_WolfKick_f(gentity_t* ent) {
 	if (ent->client->ps.leanf) {
 		return 0;   // no kick when leaning
 
-	}
-	if (oldkicktime > kicktime) {
-		return (0);
-	}
-	else {
-		oldkicktime = kicktime + 1000;
 	}
 
 	// play the anim
